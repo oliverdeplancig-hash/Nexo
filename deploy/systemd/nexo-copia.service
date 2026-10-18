@@ -1,0 +1,17 @@
+[Unit]
+Description=Nexo — cópia de segurança (banco + arquivos)
+After=network.target postgresql.service
+
+[Service]
+Type=oneshot
+User=nexo
+Group=nexo
+WorkingDirectory=/opt/nexo/backend
+EnvironmentFile=/opt/nexo/backend/.env
+ExecStart=/opt/nexo/backend/.venv/bin/python manage.py copia_seguranca criar
+Nice=10
+IOSchedulingClass=idle
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/nexo

@@ -14,6 +14,7 @@ api = [
     path("", include("apps.auditoria.urls")),
     path("", include("apps.notificacoes.urls")),
     path("", include("apps.comum.urls")),
+    path("", include("apps.manutencao.urls")),
 ]
 
 urlpatterns = [

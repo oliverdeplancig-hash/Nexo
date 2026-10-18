@@ -1,0 +1,11 @@
+[Unit]
+Description=Nexo — cópia de segurança diária
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+RandomizedDelaySec=10min
+# Se o servidor estava desligado no horário, faz a cópia ao ligar.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

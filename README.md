@@ -20,6 +20,8 @@ fazer e descobrem qual setor pode ajudar — sempre dentro do que o seu perfil p
   configuração em [docs/security/login-microsoft.md](docs/security/login-microsoft.md).
 - **Administração** de usuários, perfis e matriz de permissões por documento.
 - **Auditoria** somente-inserção encadeada por hash, com verificação de integridade.
+- **Cópia de segurança** diária do banco e dos arquivos num pacote cifrado e verificável, com restauração
+  segura — [docs/architecture/copia-de-seguranca.md](docs/architecture/copia-de-seguranca.md).
 - **PWA responsiva**: desktop, tablet e smartphone com o mesmo app.
 
 ## Estrutura
@@ -72,7 +74,7 @@ Senha dos usuários de demonstração: `Nexo@demo2026` (somente com `NEXO_DEBUG=
 ## Qualidade
 
 ```bash
-cd backend && python -m pytest && ruff check .     # 84 testes
+cd backend && python -m pytest && ruff check .     # 102 testes
 cd frontend && npm run build                       # checagem de tipos + build PWA
 ```
 

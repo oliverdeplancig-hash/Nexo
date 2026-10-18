@@ -4,7 +4,7 @@ set -euo pipefail
 DESTINO=/opt/nexo
 DADOS=/var/lib/nexo
 id nexo >/dev/null 2>&1 || useradd --system --home "$DESTINO" --shell /usr/sbin/nologin nexo
-mkdir -p "$DADOS/armazenamento"
+mkdir -p "$DADOS/armazenamento" "$DADOS/copias"
 chown -R nexo:nexo "$DADOS"
 cd "$DESTINO/backend"
 [ -d .venv ] || sudo -u nexo python3 -m venv .venv
@@ -13,7 +13,8 @@ sudo -u nexo .venv/bin/pip install -q -r requirements.txt
 sudo -u nexo .venv/bin/python manage.py migrate --noinput
 sudo -u nexo .venv/bin/python manage.py collectstatic --noinput
 sudo -u nexo .venv/bin/python manage.py inicializar_nexo
-cp "$DESTINO/deploy/systemd/"*.service /etc/systemd/system/
+cp "$DESTINO/deploy/systemd/"*.service "$DESTINO/deploy/systemd/"*.timer /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now nexo-web nexo-ingestao
+systemctl enable --now nexo-web nexo-ingestao nexo-copia.timer
+grep -q '^NEXO_BACKUP_SENHA=.' .env || echo "ATENÇÃO: defina NEXO_BACKUP_SENHA no .env (as cópias diárias falham sem ela)."
 echo "Nexo instalado. Publique $DESTINO/frontend/dist no servidor web (ver deploy/nginx/nexo.conf)."

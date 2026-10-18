@@ -41,7 +41,7 @@ Ou use `scripts/iniciar-local.ps1`.
 
 ## 2. Servidor da instituição (Linux, sem Docker, PostgreSQL 15)
 
-1. Pacotes: `python3.11+ python3-venv postgresql-15-pgvector tesseract-ocr tesseract-ocr-por` (ou compilar o pgvector), Node apenas para
+1. Pacotes: `python3.11+ python3-venv postgresql-15-pgvector postgresql-client-15 tesseract-ocr tesseract-ocr-por` (ou compilar o pgvector), Node apenas para
    gerar o build (pode ser feito em outra máquina).
 2. Usuário de sistema `nexo`; código em `/opt/nexo`; arquivos em `/var/lib/nexo/armazenamento` (fora da web).
 3. `.env` de produção: `NEXO_DEBUG=false`, `NEXO_SECRET_KEY` forte, `NEXO_ALLOWED_HOSTS`,
@@ -49,14 +49,16 @@ Ou use `scripts/iniciar-local.ps1`.
    `NEXO_PROCESSAR_IMEDIATAMENTE=false`, `NEXO_REDIS_URL` se houver Redis.
 4. `python manage.py migrate && python manage.py collectstatic && python manage.py inicializar_nexo`.
 5. Frontend: `npm ci && npm run build` → publicar `frontend/dist`.
-6. Serviços systemd em `deploy/systemd/`: `nexo-web.service` (daphne) e `nexo-ingestao.service` (worker).
+6. Serviços systemd em `deploy/systemd/`: `nexo-web.service` (daphne), `nexo-ingestao.service` (worker) e
+   `nexo-copia.timer` (cópia de segurança diária).
 7. Proxy reverso: `deploy/nginx/nexo.conf` (HTTPS, estáticos, `/api` e `/ws` para o daphne).
    Se a TI não permitir Nginx, o daphne pode servir diretamente atrás do proxy corporativo
    existente, mantendo HTTPS na borda; nesse caso sirva `frontend/dist` por um servidor estático
    aprovado pela TI.
 8. Ollama no próprio servidor ou em máquina com GPU da rede interna (`NEXO_OLLAMA_URL`).
 
-## Backup
-- `pg_dump` diário do banco (inclui auditoria e vetores).
-- Cópia do diretório de armazenamento.
-- Teste de restauração mensal.
+## Cópia de segurança
+Cópia diária do banco e dos arquivos num único pacote cifrado, com verificação e restauração por comando —
+procedimentos em [copia-de-seguranca.md](copia-de-seguranca.md) (ADR-011).
+- Servidor: `nexo-copia.timer` (02:30), pasta `/var/lib/nexo/copias`, `NEXO_BACKUP_SENHA` obrigatória.
+- Windows: `scripts\agendar-copia-windows.cmd`.

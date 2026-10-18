@@ -26,6 +26,8 @@ class TipoEvento(models.TextChoices):
     ADMIN_SETOR = "ADMIN_SETOR", "Administração de setores"
     ADMIN_REGRA = "ADMIN_REGRA", "Administração de regras do motor"
     LACUNA_TRATADA = "LACUNA_TRATADA", "Tratamento de lacuna do assistente"
+    COPIA_SEGURANCA = "COPIA_SEGURANCA", "Cópia de segurança"
+    RESTAURACAO = "RESTAURACAO", "Restauração de cópia de segurança"
 
 
 class Resultado(models.TextChoices):

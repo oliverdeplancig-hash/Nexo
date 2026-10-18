@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "apps.conversas",
     "apps.auditoria",
     "apps.notificacoes",
+    "apps.manutencao",
 ]
 
 MIDDLEWARE = [
@@ -209,6 +210,19 @@ NEXO_ENTRA = {
 # Login por usuário e senha do próprio Nexo (contas locais). Pode ser desligado quando o login institucional
 # estiver em uso; administradores de suporte continuam no admin do Django, se habilitado.
 NEXO_LOGIN_LOCAL = env.bool("NEXO_LOGIN_LOCAL", default=True)
+
+# Cópias de segurança (banco + arquivos) — ADR-011 e docs/architecture/copia-de-seguranca.md.
+NEXO_BACKUP = {
+    "DIR": Path(env("NEXO_BACKUP_DIR", default=str(BASE_DIR / "copias"))),
+    # Senha que cifra as cópias (AES-256-GCM). Guarde-a FORA do servidor: sem ela a cópia não abre.
+    "SENHA": env("NEXO_BACKUP_SENHA", default=""),
+    "EXIGIR_SENHA": env.bool("NEXO_BACKUP_EXIGIR_SENHA", default=not DEBUG),
+    "RETENCAO": env.int("NEXO_BACKUP_RETENCAO", default=14),
+    # Pasta do pg_dump/pg_restore/psql, se não estiverem no PATH
+    "PG_BIN": env("NEXO_PG_BIN", default=""),
+    # Idade máxima (horas) da última cópia antes de o painel alertar
+    "ALERTA_HORAS": env.int("NEXO_BACKUP_ALERTA_HORAS", default=30),
+}
 
 NEXO_INGESTAO = {
     "TAMANHO_TRECHO": env.int("NEXO_TAMANHO_TRECHO", default=1200),

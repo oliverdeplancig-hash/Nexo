@@ -38,6 +38,7 @@ import { Cabecalho, Erro, Pagina } from "../componentes/comuns";
 import { useAutenticacao } from "../contexto/Autenticacao";
 import { cores } from "../tema";
 import { data, dataHora, rotuloAcao } from "../util/formatos";
+import CopiasSeguranca from "./CopiasSeguranca";
 
 const ACOES = ["consultar", "visualizar", "baixar", "editar", "compartilhar", "administrar"];
 
@@ -47,6 +48,7 @@ export default function Administracao() {
     tem("admin_usuarios") && { valor: "usuarios", rotulo: "Usuários" },
     { valor: "perfis", rotulo: "Perfis e funções" },
     { valor: "documentos", rotulo: "Permissões por documento" },
+    tem("admin_permissoes") && { valor: "copias", rotulo: "Cópias de segurança" },
   ].filter(Boolean) as { valor: string; rotulo: string }[];
   const [aba, setAba] = useState(abas[0].valor);
 
@@ -59,6 +61,7 @@ export default function Administracao() {
       {aba === "usuarios" && <Usuarios />}
       {aba === "perfis" && <Perfis />}
       {aba === "documentos" && <PermissoesDocumento />}
+      {aba === "copias" && <CopiasSeguranca />}
     </Pagina>
   );
 }

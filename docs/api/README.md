@@ -62,3 +62,8 @@ Servidor → `pronto`, `conversa`, `pergunta_registrada`, `status` (`analisando`
 
 ## WebSocket `/ws/eventos/`
 Servidor → `notificacao`, `processamento` (progresso da ingestão do próprio usuário).
+
+## Manutenção
+| Método | Caminho | Descrição |
+|---|---|---|
+| GET | `manutencao/copias/` | Situação das cópias de segurança (exige `admin_permissoes`). Criar e restaurar: comando `copia_seguranca` |

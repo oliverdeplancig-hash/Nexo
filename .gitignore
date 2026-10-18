@@ -21,3 +21,5 @@ backend/.pgdata/
 scripts/*.log
 scripts/diagnostico.txt
 backend/.tessdata/
+backend/copias/
+backend/.copias-testes/
