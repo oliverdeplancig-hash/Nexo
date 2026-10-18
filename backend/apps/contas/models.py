@@ -47,6 +47,14 @@ class Usuario(AbstractUser):
         "organizacao.Setor", null=True, blank=True, on_delete=models.PROTECT, related_name="usuarios"
     )
     perfis = models.ManyToManyField(Perfil, blank=True, related_name="usuarios")
+    id_externo = models.CharField(
+        "identificador externo",
+        max_length=64,
+        null=True,
+        blank=True,
+        unique=True,
+        help_text="Identificador da conta institucional (Microsoft Entra ID: oid). Preenchido no primeiro login.",
+    )
 
     class Meta:
         verbose_name = "usuário"

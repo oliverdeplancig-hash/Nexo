@@ -1,4 +1,8 @@
+from urllib.parse import urlencode
+
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
+from django.http import HttpResponseRedirect
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import status, viewsets
@@ -11,6 +15,7 @@ from rest_framework.throttling import AnonRateThrottle
 from apps.auditoria.servico import registrar
 from apps.comum.permissoes import exige_funcao
 
+from . import entra
 from .models import FUNCOES_CRITICAS, Funcao, Perfil, Usuario
 from .serializers import (
     MeuUsuarioSerializer,
@@ -34,6 +39,8 @@ def csrf(request):
 @permission_classes([AllowAny])
 @throttle_classes([LimiteLogin])
 def entrar(request):
+    if not settings.NEXO_LOGIN_LOCAL:
+        return Response({"detail": "Use o login institucional para entrar no Nexo."}, status=status.HTTP_403_FORBIDDEN)
     usuario = authenticate(
         request,
         username=request.data.get("usuario", ""),
@@ -45,6 +52,56 @@ def entrar(request):
     login(request, usuario)
     registrar(request, "LOGIN", usuario=usuario)
     return Response(MeuUsuarioSerializer(usuario).data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def provedores(request):
+    """Formas de entrada disponíveis, para a tela de login."""
+    return Response(
+        {
+            "senha_local": settings.NEXO_LOGIN_LOCAL,
+            "microsoft": {"ativo": entra.ativo(), "rotulo": settings.NEXO_ENTRA["ROTULO"]},
+        }
+    )
+
+
+def _voltar_ao_login(codigo: str) -> HttpResponseRedirect:
+    return HttpResponseRedirect("/entrar?" + urlencode({"erro": codigo}))
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+@throttle_classes([LimiteLogin])
+def microsoft_iniciar(request):
+    if not entra.ativo():
+        return _voltar_ao_login("desativado")
+    try:
+        return HttpResponseRedirect(entra.iniciar(request, request.GET.get("destino", "/")))
+    except entra.FalhaEntra as falha:
+        registrar(request, "LOGIN", resultado="FALHA", detalhes={"metodo": "microsoft", "motivo": falha.codigo})
+        return _voltar_ao_login(falha.codigo)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+@throttle_classes([LimiteLogin])
+def microsoft_retorno(request):
+    if not entra.ativo():
+        return _voltar_ao_login("desativado")
+    try:
+        usuario, destino = entra.concluir(request)
+    except entra.FalhaEntra as falha:
+        registrar(
+            request,
+            "LOGIN",
+            resultado="FALHA",
+            detalhes={"metodo": "microsoft", "motivo": falha.codigo, "detalhe": falha.detalhe[:300]},
+        )
+        return _voltar_ao_login(falha.codigo)
+    login(request, usuario, backend="django.contrib.auth.backends.ModelBackend")
+    registrar(request, "LOGIN", usuario=usuario, detalhes={"metodo": "microsoft"})
+    return HttpResponseRedirect(destino)
 
 
 @api_view(["POST"])

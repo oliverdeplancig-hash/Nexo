@@ -6,7 +6,7 @@ python -m pytest            # usa nexo.settings_teste (provedor de IA falso, det
 python -m pytest --create-db   # após mudar migrações
 ```
 
-Requer PostgreSQL com pgvector (o banco de teste é criado automaticamente). 55 testes cobrem:
+Requer PostgreSQL com pgvector (o banco de teste é criado automaticamente). 73 testes cobrem:
 
 | Área | Arquivo | Destaques |
 |---|---|---|

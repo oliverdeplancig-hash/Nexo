@@ -7,7 +7,10 @@ Paginação: `?page=N&tamanho=M` → `{count, next, previous, results}`.
 | Método | Rota | Descrição |
 |---|---|---|
 | GET | `auth/csrf/` | Emite cookie CSRF |
-| POST | `auth/entrar/` | `{usuario, senha}` |
+| POST | `auth/entrar/` | `{usuario, senha}` (403 se `NEXO_LOGIN_LOCAL=false`) |
+| GET | `auth/provedores/` | Formas de entrada ativas: `{senha_local, microsoft: {ativo, rotulo}}` |
+| GET | `auth/microsoft/?destino=/caminho` | Redireciona para o login Microsoft (ADR-010) |
+| GET | `auth/microsoft/retorno/` | Retorno da Microsoft; cria a sessão e redireciona ao destino, ou a `/entrar?erro=<código>` |
 | POST | `auth/sair/` | Encerra a sessão |
 | GET | `auth/eu/` | Usuário, setor, perfis e funções |
 

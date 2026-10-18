@@ -13,3 +13,4 @@ python-docx>=1.1,<2
 pypdfium2>=4.30,<6           # renderiza páginas de PDF para o OCR
 pytesseract>=0.3.10,<0.4    # requer o Tesseract instalado (idioma por)
 Pillow>=10,<12
+PyJWT[crypto]>=2.8,<3       # valida o id_token do login Microsoft (ADR-010)

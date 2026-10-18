@@ -14,6 +14,8 @@ fazer e descobrem qual setor pode ajudar — sempre dentro do que o seu perfil p
   3. **IA local (Ollama)** com citações `[n]` verificadas — e, se a IA cair, os trechos relevantes.
 - **Diretório de setores**: "Qual setor pode me ajudar?".
 - **Importação** de PDF, DOCX, TXT, MD e HTML com extração, metadados sugeridos e indexação.
+- **Login institucional** pela conta Microsoft (`@pm.ba.gov.br`), com contas locais para demonstração —
+  configuração em [docs/security/login-microsoft.md](docs/security/login-microsoft.md).
 - **Administração** de usuários, perfis e matriz de permissões por documento.
 - **Auditoria** somente-inserção encadeada por hash, com verificação de integridade.
 - **PWA responsiva**: desktop, tablet e smartphone com o mesmo app.
@@ -68,7 +70,7 @@ Senha dos usuários de demonstração: `Nexo@demo2026` (somente com `NEXO_DEBUG=
 ## Qualidade
 
 ```bash
-cd backend && python -m pytest && ruff check .     # 55 testes
+cd backend && python -m pytest && ruff check .     # 73 testes
 cd frontend && npm run build                       # checagem de tipos + build PWA
 ```
 

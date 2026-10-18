@@ -193,6 +193,23 @@ NEXO_OCR = {
     "DPI": env.int("NEXO_OCR_DPI", default=300),
 }
 
+# Login institucional pela conta Microsoft (Entra ID) — ADR-010. Ativo quando os três primeiros estão definidos.
+NEXO_ENTRA = {
+    "TENANT_ID": env("NEXO_ENTRA_TENANT_ID", default=""),
+    "CLIENT_ID": env("NEXO_ENTRA_CLIENT_ID", default=""),
+    "CLIENT_SECRET": env("NEXO_ENTRA_CLIENT_SECRET", default=""),
+    "AUTORIDADE": env("NEXO_ENTRA_AUTORIDADE", default="https://login.microsoftonline.com"),
+    # Vazio = derivado da requisição (http(s)://<host>/api/v1/auth/microsoft/retorno/)
+    "REDIRECT_URI": env("NEXO_ENTRA_REDIRECT_URI", default=""),
+    "DOMINIOS": env.list("NEXO_ENTRA_DOMINIOS", default=[]),
+    "CRIAR_USUARIOS": env.bool("NEXO_ENTRA_CRIAR_USUARIOS", default=True),
+    "PERFIL_PADRAO": env("NEXO_ENTRA_PERFIL_PADRAO", default="servidor"),
+    "ROTULO": env("NEXO_ENTRA_ROTULO", default="Entrar com a conta Microsoft institucional"),
+}
+# Login por usuário e senha do próprio Nexo (contas locais). Pode ser desligado quando o login institucional
+# estiver em uso; administradores de suporte continuam no admin do Django, se habilitado.
+NEXO_LOGIN_LOCAL = env.bool("NEXO_LOGIN_LOCAL", default=True)
+
 NEXO_INGESTAO = {
     "TAMANHO_TRECHO": env.int("NEXO_TAMANHO_TRECHO", default=1200),
     "SOBREPOSICAO": env.int("NEXO_SOBREPOSICAO_TRECHO", default=200),

@@ -13,3 +13,4 @@ Formato `ADR-NNN-titulo.md`. Status inicial **Proposta**; ADR aceita não se edi
 | [ADR-007](ADR-007-auditoria-encadeada.md) | Auditoria somente-inserção encadeada por hash | Proposta | 2026-10-18 |
 | [ADR-008](ADR-008-pwa-responsiva.md) | Versão mobile como PWA responsiva | Proposta | 2026-10-18 |
 | [ADR-009](ADR-009-ocr-local-tesseract.md) | OCR local com Tesseract para documentos digitalizados | Proposta | 2026-10-18 |
+| [ADR-010](ADR-010-login-microsoft-entra-id.md) | Login institucional pela conta Microsoft (Entra ID) | Proposta | 2026-10-18 |
