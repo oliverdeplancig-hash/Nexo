@@ -32,7 +32,7 @@ import { Download, Eye, FileUp, Folder, FolderInput, FolderMinus, FolderPlus, La
 
 import { api, parametros } from "../api/cliente";
 import type { Colecao, DocumentoLista, Paginado, Setor } from "../api/tipos";
-import { Cabecalho, ChipClassificacao, EstadoVazio, Erro, IconeArquivo, Pagina } from "../componentes/comuns";
+import { Cabecalho, ChipClassificacao, ChipVigencia, EstadoVazio, Erro, IconeArquivo, Pagina } from "../componentes/comuns";
 import { AdicionarAColecao, EditorColecao, ExcluirColecao } from "../componentes/DialogosColecao";
 import { useAutenticacao } from "../contexto/Autenticacao";
 import { cores } from "../tema";
@@ -59,10 +59,11 @@ export default function Repositorio() {
   const [aviso, setAviso] = useState<string | null>(null);
 
   const aba = params.get("aba") ?? "todos";
+  const abas = tem("importar_documentos") ? [...ABAS, { valor: "revisao", rotulo: "Para revisar" }] : ABAS;
   const pagina = Number(params.get("pagina") ?? "1");
   const ordem = params.get("ordem") ?? "-atualizacao";
   const colecaoId = params.get("colecao");
-  const filtros = { aba, q: params.get("q"), tipo: params.get("tipo"), setor: params.get("setor"), de: params.get("de"), ate: params.get("ate"), colecao: colecaoId, ordem, page: pagina };
+  const filtros = { aba, q: params.get("q"), tipo: params.get("tipo"), setor: params.get("setor"), de: params.get("de"), ate: params.get("ate"), colecao: colecaoId, vigencia: params.get("vigencia"), ordem, page: pagina };
   const colecao = useQuery({
     queryKey: ["colecoes", colecaoId],
     queryFn: () => api<Colecao>(`/colecoes/${colecaoId}/`),
@@ -141,7 +142,7 @@ export default function Repositorio() {
         allowScrollButtonsMobile
         sx={{ borderBottom: `1px solid ${cores.borda}`, mb: 2, minHeight: 40, "& .MuiTab-root": { minHeight: 40, textTransform: "none", fontWeight: 500 } }}
       >
-        {ABAS.map((a) => (
+        {abas.map((a) => (
           <Tab key={a.valor} value={a.valor} label={a.rotulo} />
         ))}
       </Tabs>
@@ -195,6 +196,11 @@ export default function Repositorio() {
             <MenuItem key={s.id} value={String(s.id)}>{s.sigla}</MenuItem>
           ))}
         </TextField>
+        <TextField select size="small" label="Vigência" value={params.get("vigencia") ?? ""} onChange={(e) => mudar("vigencia", e.target.value || null)} sx={{ minWidth: 130 }}>
+          <MenuItem value="">Todos</MenuItem>
+          <MenuItem value="vigente">Vigentes</MenuItem>
+          <MenuItem value="revogado">Revogados</MenuItem>
+        </TextField>
         <TextField size="small" type="date" label="Atualizado desde" InputLabelProps={{ shrink: true }} value={params.get("de") ?? ""} onChange={(e) => mudar("de", e.target.value || null)} />
         <Button variant="text" onClick={() => navegar(`/busca${termo ? `?q=${encodeURIComponent(termo)}` : ""}`)}>
           Pesquisar no conteúdo
@@ -235,12 +241,14 @@ export default function Repositorio() {
         <Paper variant="outlined">
           <EstadoVazio
             icone={<Search size={32} />}
-            titulo={params.get("q") ? "Nenhum documento com esse nome" : colecaoId ? "Nenhum documento nesta coleção" : "Nenhum documento nesta lista"}
+            titulo={params.get("q") ? "Nenhum documento com esse nome" : colecaoId ? "Nenhum documento nesta coleção" : aba === "revisao" ? "Nenhuma revisão pendente" : "Nenhum documento nesta lista"}
             texto={
               params.get("q")
                 ? "Tente outro termo ou pesquise no conteúdo dos documentos."
                 : colecaoId
                   ? "Volte a todos os documentos, selecione os que quer reunir aqui e use “Adicionar à coleção”."
+                  : aba === "revisao"
+                    ? "Aqui aparecem os documentos que você mantém com revisão nos próximos 30 dias ou atrasada."
                   : "Os documentos autorizados para o seu perfil aparecerão aqui."
             }
             acao={params.get("q") ? <Button onClick={() => navegar(`/busca?q=${encodeURIComponent(params.get("q") ?? "")}`)}>Pesquisar no conteúdo</Button> : undefined}
@@ -288,7 +296,12 @@ export default function Repositorio() {
                       <IconeArquivo tipo={d.tipo_arquivo} />
                       <Box component="span" sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.titulo}</Box>
                     </Box>
-                    {d.classificacao && d.classificacao !== "geral" && <Box sx={{ mt: 0.5 }}><ChipClassificacao valor={d.classificacao} /></Box>}
+                    {((d.classificacao && d.classificacao !== "geral") || d.vigencia === "revogado" || d.situacao_revisao) && (
+                      <Box sx={{ mt: 0.5, display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                        {d.classificacao && d.classificacao !== "geral" && <ChipClassificacao valor={d.classificacao} />}
+                        <ChipVigencia vigencia={d.vigencia} revisao={d.situacao_revisao} />
+                      </Box>
+                    )}
                   </TableCell>
                   <TableCell>{d.tipo_arquivo.toUpperCase()}</TableCell>
                   <TableCell>{d.setor_responsavel.sigla}</TableCell>
@@ -317,7 +330,10 @@ export default function Repositorio() {
                 {d.setor_responsavel.sigla}, {d.categoria ?? "sem categoria"}, atualizado em {data(d.atualizado_em)}
               </Typography>
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <ChipClassificacao valor={d.classificacao} />
+                <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                  <ChipClassificacao valor={d.classificacao} />
+                  <ChipVigencia vigencia={d.vigencia} revisao={d.situacao_revisao} />
+                </Box>
                 <AcoesDocumento d={d} aoFavoritar={(valor) => favoritar.mutate({ id: d.id, valor })} />
               </Box>
             </Paper>

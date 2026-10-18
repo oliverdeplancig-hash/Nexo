@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
@@ -39,12 +39,16 @@ import {
   ZoomIn,
   ZoomOut,
   FolderInput,
+  Ban,
+  CalendarCheck,
+  RotateCcw,
 } from "lucide-react";
 
 import { api } from "../api/cliente";
 import type { DocumentoDetalhe, Paginado, SetorResumo, Trecho } from "../api/tipos";
 import { ChipClassificacao, Erro, IconeArquivo, Rotulo, Valor } from "../componentes/comuns";
 import { AdicionarAColecao } from "../componentes/DialogosColecao";
+import { DialogoRevisao, DialogoRevogar, useRestabelecer } from "../componentes/DialogosVigencia";
 import { cores, fonteMono } from "../tema";
 import { data, dataHora, rotuloAcao, tamanho } from "../util/formatos";
 
@@ -59,6 +63,7 @@ export default function Documento() {
   const [aviso, setAviso] = useState<string | null>(null);
   const [compartilhar, setCompartilhar] = useState(false);
   const [adicionarColecao, setAdicionarColecao] = useState(false);
+  const [dialogoVigencia, setDialogoVigencia] = useState<"revogar" | "revisao" | null>(null);
   const buscaRef = useRef<HTMLInputElement>(null);
   const versaoRef = useRef<HTMLInputElement>(null);
   const pagina = Number(params.get("pagina") ?? "1");
@@ -166,6 +171,22 @@ export default function Documento() {
             </Box>
           )}
         </Box>
+        {d.vigencia === "revogado" && (
+          <Alert severity="error" variant="filled" sx={{ borderRadius: 0 }}>
+            <strong>Documento revogado{d.revogado_em ? ` em ${data(d.revogado_em)}` : ""}.</strong>{" "}
+            {d.motivo_revogacao && `${d.motivo_revogacao}${/[.!?]$/.test(d.motivo_revogacao) ? "" : "."} `}
+            Mantido para consulta histórica; o assistente não o utiliza.
+            {d.substituido_por && (
+              <>
+                {" "}Substituído por{" "}
+                <Box component={RouterLink} to={`/documentos/${d.substituido_por.id}`} sx={{ color: "inherit", fontWeight: 600 }}>
+                  {d.substituido_por.titulo}
+                </Box>
+                .
+              </>
+            )}
+          </Alert>
+        )}
 
         {pdf && modo === "original" ? (
           <Box
@@ -253,9 +274,10 @@ export default function Documento() {
                 <IconButton onClick={() => versaoRef.current?.click()} aria-label="Enviar nova versão"><FileUp size={18} /></IconButton>
               </Tooltip>
             )}
-            <input ref={versaoRef} type="file" hidden accept=".pdf,.docx,.txt,.md,.html,.htm" onChange={(e) => e.target.files?.[0] && novaVersao.mutate(e.target.files[0])} />
+            <input ref={versaoRef} type="file" hidden accept=".pdf,.docx,.txt,.md,.html,.htm,.png,.jpg,.jpeg,.tif,.tiff" onChange={(e) => e.target.files?.[0] && novaVersao.mutate(e.target.files[0])} />
           </Box>
         </Box>
+        {pode("editar") && <AcoesVigencia d={d} aoAbrir={setDialogoVigencia} />}
 
         <Divider sx={{ my: 2 }} />
         {d.status !== "disponivel" && <Alert severity={d.status === "falha" ? "error" : "info"} sx={{ mb: 1 }}>{d.mensagem_erro || "Documento em processamento."}</Alert>}
@@ -306,6 +328,29 @@ export default function Documento() {
               </Box>
             </>
           )}
+          <Rotulo>Vigência</Rotulo>
+          <Valor>{d.vigencia === "revogado" ? `Revogado${d.revogado_em ? ` em ${data(d.revogado_em)}` : ""}` : "Vigente"}</Valor>
+          {d.substitui.length > 0 && (
+            <>
+              <Rotulo>Substitui</Rotulo>
+              <Box component="dd" sx={{ m: 0, mt: 0.5, display: "grid", gap: 0.25 }}>
+                {d.substitui.map((s) => (
+                  <Box key={s.id} component={RouterLink} to={`/documentos/${s.id}`} sx={{ color: cores.primariaHover, fontSize: 14 }}>
+                    {s.titulo}
+                  </Box>
+                ))}
+              </Box>
+            </>
+          )}
+          {(d.revisar_em || d.revisado_em) && (
+            <>
+              <Rotulo>Revisão</Rotulo>
+              <Valor>
+                {d.revisar_em ? `Próxima em ${data(d.revisar_em)}` : "Sem revisão periódica"}
+                {d.revisado_em ? `; última em ${data(d.revisado_em)}` : ""}
+              </Valor>
+            </>
+          )}
           <Rotulo>Suas permissões</Rotulo>
           <Valor>{d.acoes_permitidas.map((a) => rotuloAcao[a]).join(", ")}</Valor>
           <Rotulo>Integridade (SHA-256)</Rotulo>
@@ -325,6 +370,8 @@ export default function Documento() {
       </Box>
 
       <DialogoCompartilhar aberto={compartilhar} aoFechar={() => setCompartilhar(false)} documentoId={d.id} acoes={d.acoes_permitidas} aoConcluir={(m) => setAviso(m)} />
+      {dialogoVigencia === "revogar" && <DialogoRevogar documento={d} aoFechar={() => setDialogoVigencia(null)} />}
+      {dialogoVigencia === "revisao" && <DialogoRevisao documento={d} aoFechar={() => setDialogoVigencia(null)} />}
       {adicionarColecao && (
         <AdicionarAColecao documentos={[d.id]} aoFechar={() => setAdicionarColecao(false)} aoConcluir={(m) => setAviso(m)} />
       )}
@@ -412,5 +459,36 @@ function DialogoCompartilhar({
         <Button variant="contained" onClick={salvar} disabled={!destino}>Compartilhar</Button>
       </DialogActions>
     </Dialog>
+  );
+}
+
+/** Revisão e vigência, para quem pode editar o documento (ADR-015). */
+function AcoesVigencia({ d, aoAbrir }: { d: DocumentoDetalhe; aoAbrir: (q: "revogar" | "revisao") => void }) {
+  const restabelecer = useRestabelecer(d);
+  return (
+    <Box sx={{ mt: 1.5, display: "grid", gap: 1 }}>
+      {d.situacao_revisao && (
+        <Alert severity={d.situacao_revisao === "atrasada" ? "warning" : "info"} variant="outlined">
+          {d.situacao_revisao === "atrasada" ? "Revisão atrasada" : "Revisão próxima"}: prevista para {data(d.revisar_em)}.
+        </Alert>
+      )}
+      {restabelecer.isError && <Alert severity="error">{(restabelecer.error as Error).message}</Alert>}
+      <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+        {d.vigencia === "vigente" ? (
+          <>
+            <Button size="small" variant="outlined" startIcon={<CalendarCheck size={16} />} onClick={() => aoAbrir("revisao")}>
+              Registrar revisão
+            </Button>
+            <Button size="small" color="error" startIcon={<Ban size={16} />} onClick={() => aoAbrir("revogar")}>
+              Revogar
+            </Button>
+          </>
+        ) : (
+          <Button size="small" variant="outlined" startIcon={<RotateCcw size={16} />} disabled={restabelecer.isPending} onClick={() => restabelecer.mutate()}>
+            Restabelecer vigência
+          </Button>
+        )}
+      </Box>
+    </Box>
   );
 }

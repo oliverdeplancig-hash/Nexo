@@ -76,3 +76,12 @@ Servidor → `notificacao`, `processamento` (progresso da ingestão do próprio 
 | POST | `colecoes/{id}/documentos/` | `{documentos: [ids]}` inclui só os que a pessoa pode consultar → `{adicionados, ignorados}` |
 | DELETE | `colecoes/{id}/documentos/{documento_id}/` | Tira o documento da coleção |
 | GET | `documentos/?colecao={id}` | Documentos da coleção visíveis para a pessoa |
+
+## Vigência e revisão (ADR-015)
+| Método | Caminho | Descrição |
+|---|---|---|
+| POST | `documentos/{id}/revogar/` | `{motivo, substituido_por?, revogado_em?}` — exige editar |
+| POST | `documentos/{id}/restabelecer/` | Volta a vigente |
+| POST | `documentos/{id}/revisao/` | `{proxima: AAAA-MM-DD \| null}` registra a revisão de hoje |
+| GET | `documentos/?aba=revisao` | Documentos que a pessoa pode editar com revisão em até 30 dias ou atrasada |
+| GET | `documentos/?vigencia=vigente\|revogado` · `busca/?revogados=1` | Filtros; a busca exclui revogados por padrão |

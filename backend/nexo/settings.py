@@ -211,6 +211,12 @@ NEXO_ENTRA = {
 # estiver em uso; administradores de suporte continuam no admin do Django, se habilitado.
 NEXO_LOGIN_LOCAL = env.bool("NEXO_LOGIN_LOCAL", default=True)
 
+# Revisão periódica de documentos (ADR-015)
+NEXO_REVISAO = {
+    "ANTECEDENCIA_DIAS": env.int("NEXO_REVISAO_ANTECEDENCIA_DIAS", default=30),
+    "REPETIR_DIAS": env.int("NEXO_REVISAO_REPETIR_DIAS", default=7),
+}
+
 # Cópias de segurança (banco + arquivos) — ADR-011 e docs/architecture/copia-de-seguranca.md.
 NEXO_BACKUP = {
     "DIR": Path(env("NEXO_BACKUP_DIR", default=str(BASE_DIR / "copias"))),

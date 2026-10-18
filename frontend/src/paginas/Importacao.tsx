@@ -58,6 +58,7 @@ export default function Importacao() {
     setor_responsavel: usuario?.setor ? String(usuario.setor.id) : "",
     palavras_chave: "",
     data_documento: "",
+    revisar_em: "",
     numero_referencia: "",
     classificacao: "setor",
     permite_download_geral: false,
@@ -195,6 +196,7 @@ export default function Importacao() {
                 {(setores.data?.results ?? []).map((s) => <MenuItem key={s.id} value={String(s.id)}>{s.sigla} — {s.nome}</MenuItem>)}
               </TextField>
               {campo("data_documento", "Data do documento", { type: "date", InputLabelProps: { shrink: true } })}
+              {campo("revisar_em", "Próxima revisão", { type: "date", InputLabelProps: { shrink: true }, helperText: "Opcional. Quem mantém o documento é avisado 30 dias antes." })}
               {campo("numero_referencia", "Número ou código de referência", { helperText: "Se vazio, o Nexo tenta identificar no texto." })}
             </Box>
             {campo("palavras_chave", "Palavras-chave", { helperText: "Separe por vírgulas. Se vazio, serão sugeridas automaticamente." })}

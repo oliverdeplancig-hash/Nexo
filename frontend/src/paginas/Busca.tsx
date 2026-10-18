@@ -21,7 +21,7 @@ import { Bot, ExternalLink, Filter, Search } from "lucide-react";
 
 import { api, parametros } from "../api/cliente";
 import type { RespostaBusca } from "../api/tipos";
-import { Cabecalho, ChipClassificacao, Destaque, EstadoVazio, Erro, IconeArquivo, Pagina } from "../componentes/comuns";
+import { Cabecalho, ChipClassificacao, ChipVigencia, Destaque, EstadoVazio, Erro, IconeArquivo, Pagina } from "../componentes/comuns";
 import { cores, sombras } from "../tema";
 import { data } from "../util/formatos";
 
@@ -50,6 +50,7 @@ export default function Busca() {
     palavra_chave: params.get("palavra_chave"),
     de: params.get("de"),
     ate: params.get("ate"),
+    revogados: params.get("revogados"),
   };
 
   const busca = useQuery({
@@ -110,6 +111,12 @@ export default function Busca() {
           <TextField size="small" type="date" label="Até" InputLabelProps={{ shrink: true }} value={params.get("ate") ?? ""} onChange={(e) => mudar("ate", e.target.value || null)} />
         </Box>
       </GrupoFiltro>
+      <GrupoFiltro titulo="Vigência">
+        <FormControlLabel
+          control={<Checkbox size="small" checked={params.get("revogados") === "1"} onChange={(e) => mudar("revogados", e.target.checked ? "1" : null)} />}
+          label="Incluir documentos revogados"
+        />
+      </GrupoFiltro>
       <GrupoFiltro titulo="Palavra-chave">
         <TextField size="small" fullWidth placeholder="Ex.: férias" defaultValue={params.get("palavra_chave") ?? ""} onBlur={(e) => mudar("palavra_chave", e.target.value.trim() || null)} />
       </GrupoFiltro>
@@ -169,6 +176,7 @@ export default function Busca() {
                       <IconeArquivo tipo={r.documento.tipo_arquivo} />
                       <Typography component="h3" sx={{ fontWeight: 600, fontSize: 16, flex: 1, color: cores.titulo }}>{r.documento.titulo}</Typography>
                       <ChipClassificacao valor={r.documento.classificacao} />
+                      <ChipVigencia vigencia={r.documento.vigencia} revisao={r.documento.situacao_revisao} />
                     </Box>
                     <Typography variant="caption" component="p" sx={{ mb: 1.25 }}>
                       {r.documento.setor_responsavel.nome}, {r.documento.categoria ?? "sem categoria"}, atualizado em {data(r.documento.atualizado_em)}

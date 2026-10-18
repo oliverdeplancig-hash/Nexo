@@ -5,7 +5,7 @@ import { ExternalLink, Lock } from "lucide-react";
 import type { Fonte, SetorSugerido } from "../api/tipos";
 import { cores, fonteMono } from "../tema";
 import { data } from "../util/formatos";
-import { IconeArquivo } from "./comuns";
+import { ChipVigencia, IconeArquivo } from "./comuns";
 
 export function CartaoFonte({ fonte, compacto = false }: { fonte: Fonte; compacto?: boolean }) {
   const navegar = useNavigate();
@@ -38,6 +38,7 @@ export function CartaoFonte({ fonte, compacto = false }: { fonte: Fonte; compact
         <Typography sx={{ fontSize: 14, fontWeight: 600, flex: 1, minWidth: 0 }} noWrap title={fonte.titulo}>
           {fonte.titulo}
         </Typography>
+        <ChipVigencia vigencia={fonte.vigencia} />
       </Box>
       {local && <Typography variant="caption">{local}</Typography>}
       {fonte.trecho && !compacto && (

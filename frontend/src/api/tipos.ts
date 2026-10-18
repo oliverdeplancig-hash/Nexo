@@ -58,6 +58,10 @@ export interface DocumentoLista {
   atualizado_em: string;
   acoes_permitidas: Acao[];
   favorito: boolean;
+  vigencia: "vigente" | "revogado";
+  revogado_em: string | null;
+  revisar_em: string | null;
+  situacao_revisao: "proxima" | "atrasada" | null;
 }
 
 export interface Colecao {
@@ -86,6 +90,10 @@ export interface DocumentoDetalhe extends DocumentoLista {
   indexacao_semantica: boolean;
   paginas_ocr: number;
   mensagem_erro: string;
+  motivo_revogacao: string;
+  substituido_por: { id: number; titulo: string } | null;
+  substitui: { id: number; titulo: string }[];
+  revisado_em: string | null;
 }
 
 export interface Trecho {
@@ -106,6 +114,7 @@ export interface Fonte {
   secao: string;
   trecho: string;
   versao: number;
+  vigencia?: "vigente" | "revogado";
   atualizado_em: string;
   pode_abrir: boolean;
   citada: boolean;
@@ -289,7 +298,7 @@ export interface Regra {
   vigencia_fim: string | null;
   versao: number;
   publicada_em: string | null;
-  fontes: { id?: number; documento: number; documento_titulo?: string; pagina: number | null; secao: string; trecho_citado: string }[];
+  fontes: { id?: number; documento: number; documento_titulo?: string; documento_vigencia?: string; pagina: number | null; secao: string; trecho_citado: string }[];
   atualizado_em: string;
 }
 

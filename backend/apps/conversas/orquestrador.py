@@ -92,6 +92,7 @@ def _fonte_de_trecho(t: TrechoContexto, documento, usuario, citada: bool, texto_
         "secao": t.secao,
         "trecho": texto_trecho[:600],
         "versao": documento.versao,
+        "vigencia": documento.vigencia,
         "atualizado_em": documento.atualizado_em.isoformat(),
         "pode_abrir": pode(usuario, Acao.VISUALIZAR, documento),
         "citada": citada,
@@ -131,10 +132,12 @@ def preparar(usuario, conversa: Conversa, pergunta: str) -> Plano:
         if resultado.decisao == "responder":
             r = renderizar(resultado.regra, usuario)
             rastro["regra"] = {"codigo": resultado.regra.codigo, "versao": resultado.regra.versao}
+            if r.get("fonte_revogada"):
+                rastro["aviso"] = "fonte da regra revogada"
             return Plano(
                 tipo="pronta",
                 origem=Origem.DETERMINISTICO,
-                confianca=Confianca.VERIFICADA,
+                confianca=Confianca.CAUTELA if r.get("fonte_revogada") else Confianca.VERIFICADA,
                 conteudo=r["conteudo"],
                 etapas=r["etapas"],
                 setor=r["setor"],

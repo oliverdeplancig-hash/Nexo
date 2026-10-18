@@ -7,10 +7,20 @@ from .models import FonteRegra, Regra, VersaoRegra
 
 class FonteRegraSerializer(serializers.ModelSerializer):
     documento_titulo = serializers.CharField(source="documento.titulo", read_only=True)
+    documento_vigencia = serializers.CharField(source="documento.vigencia", read_only=True)
 
     class Meta:
         model = FonteRegra
-        fields = ["id", "documento", "documento_titulo", "pagina", "secao", "trecho_citado", "ordem"]
+        fields = [
+            "id",
+            "documento",
+            "documento_titulo",
+            "documento_vigencia",
+            "pagina",
+            "secao",
+            "trecho_citado",
+            "ordem",
+        ]
 
 
 class RegraSerializer(serializers.ModelSerializer):

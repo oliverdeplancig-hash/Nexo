@@ -34,6 +34,11 @@ class StatusDocumento(models.TextChoices):
     ARQUIVADO = "arquivado", "Arquivado"
 
 
+class Vigencia(models.TextChoices):
+    VIGENTE = "vigente", "Vigente"
+    REVOGADO = "revogado", "Revogado"
+
+
 class Categoria(models.Model):
     nome = models.CharField(max_length=120, unique=True)
     descricao = models.TextField(blank=True)
@@ -109,11 +114,28 @@ class Documento(ModeloComDatas):
     )
     disponibilizado_em = models.DateTimeField(null=True, blank=True)
 
+    # Vigência e revisão (ADR-015)
+    vigencia = models.CharField("vigência", max_length=12, choices=Vigencia.choices, default=Vigencia.VIGENTE)
+    revogado_em = models.DateField("revogado em", null=True, blank=True)
+    motivo_revogacao = models.CharField("motivo da revogação", max_length=500, blank=True)
+    substituido_por = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="substitui",
+        verbose_name="substituído por",
+    )
+    revisar_em = models.DateField("próxima revisão", null=True, blank=True)
+    revisado_em = models.DateField("última revisão", null=True, blank=True)
+    revisao_avisada_em = models.DateField(null=True, blank=True, editable=False)
+
     class Meta:
         ordering = ["-atualizado_em"]
         indexes = [
             models.Index(fields=["status", "classificacao", "setor_responsavel"]),
             models.Index(fields=["titulo"]),
+            models.Index(fields=["vigencia", "revisar_em"]),
         ]
 
     def __str__(self):

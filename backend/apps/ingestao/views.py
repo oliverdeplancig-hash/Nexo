@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.dateparse import parse_date
 from rest_framework import status
 from rest_framework.decorators import api_view, parser_classes, permission_classes
@@ -76,6 +77,9 @@ def _criar_documento(request, arquivo, metadados: dict, versao_anterior: Documen
             hash_sha256=hash_hex,
             versao=(versao_anterior.versao + 1) if versao_anterior else 1,
             versao_anterior=versao_anterior,
+            revisar_em=metadados.get("revisar_em"),
+            # Nova versão conta como revisão do documento (ADR-015).
+            revisado_em=timezone.localdate() if versao_anterior else None,
         )
         documento.arquivo.save(arquivo.name, arquivo, save=False)
         documento.save()
@@ -153,6 +157,7 @@ def _metadados(request) -> dict:
         "setores_autorizados": _lista(request, "setores_autorizados"),
         "perfis_autorizados": _lista(request, "perfis_autorizados"),
         "colecoes": _lista(request, "colecoes"),
+        "revisar_em": parse_date(d.get("revisar_em") or "") if d.get("revisar_em") else None,
     }
 
 
@@ -199,6 +204,7 @@ def nova_versao(request, documento_id):
         "setores_autorizados": [],
         "perfis_autorizados": [],
         "colecoes": list(anterior.colecoes.values_list("id", flat=True)),
+        "revisar_em": parse_date(request.data.get("revisar_em") or "") or anterior.revisar_em,
     }
     resultado = _criar_documento(request, arquivo, metadados, versao_anterior=anterior)
     return Response(resultado, status=status.HTTP_201_CREATED if "id" in resultado else status.HTTP_400_BAD_REQUEST)

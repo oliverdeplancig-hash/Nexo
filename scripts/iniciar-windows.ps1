@@ -47,6 +47,7 @@ try {
     & $py manage.py migrate --noinput
     if ($LASTEXITCODE -ne 0) { throw "Falha nas migracoes." }
     & $py manage.py carregar_demo
+    & $py manage.py avisar_revisoes | Out-Null
     Pop-Location
 
     # IA local: se o .env usa Ollama, garante que ele esteja ligado.

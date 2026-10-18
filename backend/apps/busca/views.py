@@ -17,7 +17,9 @@ def buscar(request):
     p = request.query_params
     consulta = (p.get("q") or "").strip()[:500]
     modo = p.get("modo") if p.get("modo") in MODOS else "hibrida"
-    filtros = {k: p.get(k) for k in ("tipo", "setor", "categoria", "palavra_chave", "de", "ate") if p.get(k)}
+    filtros = {
+        k: p.get(k) for k in ("tipo", "setor", "categoria", "palavra_chave", "de", "ate", "revogados") if p.get(k)
+    }
 
     if not consulta:
         return Response({"consulta": "", "total_documentos": 0, "resultados": [], "facetas": {}})

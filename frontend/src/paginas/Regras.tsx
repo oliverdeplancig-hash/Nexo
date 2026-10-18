@@ -124,7 +124,18 @@ export default function Regras() {
                 {regras.data?.results.map((r) => (
                   <TableRow key={r.id} hover>
                     <TableCell sx={{ fontFamily: fonteMono, fontSize: 13 }}>{r.codigo}</TableCell>
-                    <TableCell sx={{ fontWeight: 500 }}>{r.titulo}</TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>
+                      {r.titulo}
+                      {r.fontes.some((f) => f.documento_vigencia === "revogado") && (
+                        <Chip
+                          size="small"
+                          variant="outlined"
+                          label="Fonte revogada: revise"
+                          title="Um documento que fundamenta esta regra foi revogado. Atualize a resposta e a fonte."
+                          sx={{ ml: 1, height: 20, fontSize: 11, color: cores.erro, borderColor: cores.erro }}
+                        />
+                      )}
+                    </TableCell>
                     <TableCell>{TIPOS[r.tipo]}</TableCell>
                     <TableCell>{r.setor_responsavel_sigla ?? "—"}</TableCell>
                     <TableCell>

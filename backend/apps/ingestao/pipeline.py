@@ -143,6 +143,8 @@ def _concluir(documento: Documento, total_trechos: int) -> None:
         if anterior and anterior.status == StatusDocumento.DISPONIVEL:
             anterior.status = StatusDocumento.ARQUIVADO
             anterior.save(update_fields=["status", "atualizado_em"])
+            # Quem apontava a versão anterior como substituta passa a apontar a nova (ADR-015).
+            Documento.objects.filter(substituido_por=anterior).update(substituido_por=documento)
     _etapa(documento, StatusDocumento.DISPONIVEL, mensagem=f"{total_trechos} trechos indexados.")
     registrar(
         None,

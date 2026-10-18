@@ -151,6 +151,28 @@ export function ChipClassificacao({ valor }: { valor: string | null }) {
   );
 }
 
+/** Situação de vigência e revisão do documento (ADR-015). Não mostra nada para documento vigente em dia. */
+export function ChipVigencia({ vigencia, revisao }: { vigencia?: string; revisao?: string | null }) {
+  const estilo = { height: 22, fontSize: 12 };
+  if (vigencia === "revogado") {
+    return (
+      <Chip
+        size="small"
+        variant="outlined"
+        label="Revogado"
+        sx={{ ...estilo, color: cores.erro, borderColor: cores.erro, bgcolor: "transparent" }}
+      />
+    );
+  }
+  if (revisao === "atrasada") {
+    return <Chip size="small" label="Revisão atrasada" sx={{ ...estilo, bgcolor: cores.cautela.fundo, color: cores.cautela.texto }} />;
+  }
+  if (revisao === "proxima") {
+    return <Chip size="small" variant="outlined" label="Revisão próxima" sx={{ ...estilo, color: cores.textoSecundario }} />;
+  }
+  return null;
+}
+
 /** Renderiza os marcadores \u0002…\u0003 da busca como <mark>. Nunca usa HTML do servidor. */
 export function Destaque({ texto }: { texto: string }) {
   const partes = texto.split(/(\u0002[^\u0003]*\u0003)/g);

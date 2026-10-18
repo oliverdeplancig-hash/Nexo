@@ -194,6 +194,7 @@ def renderizar(regra: Regra, usuario) -> dict:
                 "secao": fonte.secao,
                 "trecho": fonte.trecho_citado,
                 "versao": doc.versao,
+                "vigencia": doc.vigencia,
                 "atualizado_em": doc.atualizado_em.isoformat(),
                 "pode_abrir": pode(usuario, Acao.VISUALIZAR, doc),
                 "citada": True,
@@ -230,7 +231,17 @@ def renderizar(regra: Regra, usuario) -> dict:
         return {"conteudo": conteudo, "etapas": [], "setor": setor_dados, "fontes": [], "modo": "somente_roteamento"}
 
     conteudo = _substituir(regra.resposta, usuario).replace("{setor_responsavel}", setor.nome if setor else "")
+    revogadas = [f for f in todas if f.documento.vigencia == "revogado" and pode(usuario, Acao.CONSULTAR, f.documento)]
+    if revogadas:
+        # A regra continua respondendo até a gestão revisá-la, mas avisa que o fundamento foi revogado (ADR-015).
+        quando = revogadas[0].documento.revogado_em
+        conteudo += (
+            "\n\n> **Atenção:** o documento que fundamenta esta resposta foi revogado"
+            + (f" em {quando.strftime('%d/%m/%Y')}" if quando else "")
+            + ". Confirme a orientação com o setor responsável antes de seguir."
+        )
     return {
+        "fonte_revogada": bool(revogadas),
         "conteudo": conteudo,
         "etapas": [{"titulo": e.get("titulo", ""), "descricao": e.get("descricao", "")} for e in (regra.etapas or [])],
         "setor": setor_dados,

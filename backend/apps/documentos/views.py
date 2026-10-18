@@ -15,6 +15,7 @@ from apps.auditoria.servico import registrar
 from apps.contas.models import Funcao
 
 from . import colecoes as colecoes_regras
+from . import vigencia as vigencia_regras
 from .models import AcessoRecente, Categoria, Favorito
 from .serializers import (
     CategoriaSerializer,
@@ -70,6 +71,12 @@ class DocumentoViewSet(
             qs = qs.filter(favoritado_por__usuario=usuario)
         elif aba == "recentes":
             qs = qs.filter(id__in=AcessoRecente.objects.filter(usuario=usuario).values("documento_id")[:50])
+        elif aba == "revisao":
+            # Documentos que a pessoa mantém (pode editar) com revisão próxima ou atrasada (ADR-015).
+            editaveis = documentos_visiveis(usuario, Acao.EDITAR).values("id")
+            qs = qs.filter(id__in=editaveis).filter(vigencia_regras.filtro_revisao_pendente())
+        if p.get("vigencia") in ("vigente", "revogado"):
+            qs = qs.filter(vigencia=p["vigencia"])
         elif aba == "compartilhados":
             qs = qs.filter(
                 autorizacoes__usuario=usuario,
@@ -132,6 +139,68 @@ class DocumentoViewSet(
             objeto=documento,
             detalhes={"campos": sorted(serializer.validated_data)},
         )
+
+    # ------------------------------------------------------------ vigência e revisão (ADR-015)
+    def _exigir_edicao(self, documento, operacao: str):
+        if not decidir(self.request.user, documento).permite(Acao.EDITAR):
+            registrar(
+                self.request, "FALHA_AUTORIZACAO", objeto=documento, resultado="NEGADO", detalhes={"operacao": operacao}
+            )
+            raise PermissionDenied("Você não pode alterar este documento.")
+
+    @action(detail=True, methods=["post"])
+    def revogar(self, request, pk=None):
+        """{"motivo": "...", "substituido_por": id?, "revogado_em": "AAAA-MM-DD"?}"""
+        documento = self.get_object()
+        self._exigir_edicao(documento, "revogar")
+        motivo = str(request.data.get("motivo") or "").strip()
+        if not motivo:
+            return Response({"motivo": ["Informe o motivo (ex.: revogado pela Portaria nº ...)."]}, status=400)
+        substituto = None
+        if request.data.get("substituido_por"):
+            substituto = documentos_visiveis(request.user).filter(pk=request.data["substituido_por"]).first()
+            if substituto is None or substituto.pk == documento.pk:
+                return Response({"substituido_por": ["Documento substituto não encontrado."]}, status=400)
+        em = parse_date(str(request.data.get("revogado_em") or "")) if request.data.get("revogado_em") else None
+        vigencia_regras.revogar(documento, motivo=motivo, substituido_por=substituto, em=em)
+        registrar(
+            request,
+            "DOCUMENTO_ALTERADO",
+            objeto=documento,
+            detalhes={
+                "acao": "revogar",
+                "motivo": motivo[:300],
+                "substituido_por": substituto.pk if substituto else None,
+            },
+        )
+        return Response(DocumentoDetalheSerializer(documento, context=self.get_serializer_context()).data)
+
+    @action(detail=True, methods=["post"])
+    def restabelecer(self, request, pk=None):
+        documento = self.get_object()
+        self._exigir_edicao(documento, "restabelecer")
+        vigencia_regras.restabelecer(documento)
+        registrar(request, "DOCUMENTO_ALTERADO", objeto=documento, detalhes={"acao": "restabelecer_vigencia"})
+        return Response(DocumentoDetalheSerializer(documento, context=self.get_serializer_context()).data)
+
+    @action(detail=True, methods=["post"])
+    def revisao(self, request, pk=None):
+        """Registra que o documento foi revisado hoje. {"proxima": "AAAA-MM-DD" | null}"""
+        documento = self.get_object()
+        self._exigir_edicao(documento, "revisar")
+        proxima = None
+        if request.data.get("proxima"):
+            proxima = parse_date(str(request.data["proxima"]))
+            if proxima is None or proxima <= vigencia_regras.hoje():
+                return Response({"proxima": ["Informe uma data futura para a próxima revisão."]}, status=400)
+        vigencia_regras.registrar_revisao(documento, proxima)
+        registrar(
+            request,
+            "DOCUMENTO_ALTERADO",
+            objeto=documento,
+            detalhes={"acao": "registrar_revisao", "proxima": proxima.isoformat() if proxima else None},
+        )
+        return Response(DocumentoDetalheSerializer(documento, context=self.get_serializer_context()).data)
 
     def destroy(self, request, *args, **kwargs):
         """Arquiva (não apaga) o documento."""

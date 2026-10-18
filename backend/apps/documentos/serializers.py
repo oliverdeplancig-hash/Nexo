@@ -83,6 +83,12 @@ class DocumentoListaSerializer(serializers.ModelSerializer):
     classificacao = serializers.SerializerMethodField()
     acoes_permitidas = serializers.SerializerMethodField()
     favorito = serializers.SerializerMethodField()
+    situacao_revisao = serializers.SerializerMethodField()
+
+    def get_situacao_revisao(self, obj):
+        from .vigencia import situacao_revisao
+
+        return situacao_revisao(obj)
 
     class Meta:
         model = Documento
@@ -101,6 +107,10 @@ class DocumentoListaSerializer(serializers.ModelSerializer):
             "atualizado_em",
             "acoes_permitidas",
             "favorito",
+            "vigencia",
+            "revogado_em",
+            "revisar_em",
+            "situacao_revisao",
         ]
 
     def _acoes(self, obj) -> set[str]:
@@ -142,6 +152,25 @@ class DocumentoListaSerializer(serializers.ModelSerializer):
 class DocumentoDetalheSerializer(DocumentoListaSerializer):
     palavras_chave = serializers.ListField(child=serializers.CharField(), read_only=True)
     colecoes = serializers.SerializerMethodField()
+    substituido_por = serializers.SerializerMethodField()
+    substitui = serializers.SerializerMethodField()
+
+    def _resumo_visivel(self, documento):
+        """Título e id só se a pessoa pode consultar o outro documento (não revela restritos)."""
+        if documento is None:
+            return None
+        from apps.acesso.models import Acao
+        from apps.acesso.servico import decidir
+
+        if not decidir(self.context["request"].user, documento).permite(Acao.CONSULTAR):
+            return None
+        return {"id": documento.id, "titulo": documento.titulo}
+
+    def get_substituido_por(self, obj):
+        return self._resumo_visivel(obj.substituido_por)
+
+    def get_substitui(self, obj):
+        return [r for r in (self._resumo_visivel(d) for d in obj.substitui.all()) if r]
 
     def get_colecoes(self, obj):
         """Só as coleções que a pessoa pode ver (coleções pessoais de outras pessoas não aparecem)."""
@@ -165,6 +194,10 @@ class DocumentoDetalheSerializer(DocumentoListaSerializer):
             "indexacao_semantica",
             "paginas_ocr",
             "mensagem_erro",
+            "motivo_revogacao",
+            "substituido_por",
+            "substitui",
+            "revisado_em",
         ]
 
 
@@ -182,6 +215,7 @@ class DocumentoEdicaoSerializer(serializers.ModelSerializer):
             "classificacao",
             "permite_download_geral",
             "colecoes",
+            "revisar_em",
         ]
 
     def update(self, instance, dados):

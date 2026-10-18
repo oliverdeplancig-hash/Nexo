@@ -120,6 +120,7 @@ export const GRUPOS: Grupo[] = [
         ],
         dicas: [
           "Sem resultados? Use termos mais gerais, remova filtros ou pergunte ao assistente qual setor pode ajudar.",
+          "Documentos revogados ficam fora da busca. Para encontrá-los, marque “Incluir documentos revogados” em Vigência.",
         ],
       },
       {
@@ -129,7 +130,7 @@ export const GRUPOS: Grupo[] = [
         resumo:
           "O Repositório documental lista os documentos autorizados para você, com abas para Todos, Meus documentos, Favoritos, Recentes e Compartilhados comigo.",
         passos: [
-          "Filtre por nome ou número de referência, tipo, setor e data de atualização.",
+          "Filtre por nome ou número de referência, tipo, setor, vigência (vigentes ou revogados) e data de atualização.",
           "Clique no título das colunas para ordenar; alterne entre tabela e grade.",
           "Marque a caixa de seleção de vários documentos para adicioná-los aos favoritos ou a uma coleção de uma vez.",
           "Use o ícone de olho para visualizar e o de seta para baixar (quando permitido).",
@@ -147,6 +148,7 @@ export const GRUPOS: Grupo[] = [
           "Na barra de ações: favoritar, adicionar à coleção, copiar referência, baixar e compartilhar (conforme suas permissões).",
         ],
         dicas: [
+          "Documento revogado aparece com uma faixa vermelha no topo, com a data, o motivo e, quando houver, o documento que o substitui. Ele continua disponível para consulta histórica, mas o assistente não o usa.",
           "Documentos digitalizados são lidos por OCR. Quando isso acontece, um aviso indica que a leitura automática pode ter erros: confira no original.",
           "“Suas permissões” mostra exatamente o que você pode fazer com aquele documento.",
         ],
@@ -177,7 +179,7 @@ export const GRUPOS: Grupo[] = [
         titulo: "Notificações",
         telas: ["/notificacoes"],
         resumo:
-          "O sino avisa quando um documento que você enviou terminou de ser processado (ou falhou) e quando alguém compartilhou um documento com você. Use “Marcar todas como lidas” para limpar a lista.",
+          "O sino avisa quando um documento que você enviou terminou de ser processado (ou falhou), quando alguém compartilhou um documento com você e, para quem mantém documentos, quando uma revisão está próxima ou atrasada. Use “Marcar todas como lidas” para limpar a lista.",
       },
     ],
   },
@@ -236,7 +238,7 @@ export const GRUPOS: Grupo[] = [
           "Em Importar documentos você envia PDF, DOCX, TXT, MD, HTML e imagens digitalizadas (PNG, JPG, TIFF), até 50 MB por arquivo, com os metadados e a classificação de acesso.",
         passos: [
           "Arraste os arquivos ou clique em “Selecionar arquivos”.",
-          "Preencha os metadados. Título, palavras-chave e data podem ficar vazios: o Nexo sugere a partir do arquivo.",
+          "Preencha os metadados. Título, palavras-chave e data podem ficar vazios: o Nexo sugere a partir do arquivo. Em “Próxima revisão”, informe quando o documento deve ser conferido de novo.",
           "Escolha o setor responsável e a classificação: Geral (todos os servidores), Restrito ao setor responsável, ou Restrito (somente autorizados por setor ou perfil).",
           "Defina o download: “Permitir download a todos” ou “Autorizados também podem baixar”.",
           "Clique em “Enviar para processamento” e acompanhe as etapas: arquivo recebido, extração de conteúdo, identificação de metadados, indexação para pesquisa e disponibilização.",
@@ -246,6 +248,26 @@ export const GRUPOS: Grupo[] = [
           "Se uma etapa falhar, a mensagem explica o motivo e há o botão “Tentar novamente”.",
           "Para atualizar um documento, abra-o e use “Enviar nova versão”: as versões anteriores ficam registradas.",
           "A classificação decide quem vê o documento em todo o Nexo (busca, assistente e coleções). Na dúvida, classifique de forma mais restrita.",
+        ],
+      },
+      {
+        id: "vigencia",
+        titulo: "Vigência e revisão de documentos",
+        funcao: "importar_documentos",
+        telas: ["/repositorio"],
+        resumo:
+          "Documentos têm vigência (vigente ou revogado) e podem ter revisão periódica. Quem pode editar o documento vê, na tela dele, os botões “Registrar revisão” e “Revogar”.",
+        passos: [
+          "Para ver o que precisa de revisão, abra Repositório documental → aba “Para revisar” (documentos que você mantém com revisão nos próximos 30 dias ou atrasada).",
+          "Abra o documento e confira se continua válido. Se continua, clique em “Registrar revisão” e escolha a data da próxima.",
+          "Se o conteúdo mudou, use “Enviar nova versão”: a nova versão conta como revisão.",
+          "Se o documento deixou de valer, clique em “Revogar”, informe o motivo e, se houver, o documento que o substitui.",
+          "Revogou por engano? Use “Restabelecer vigência”.",
+        ],
+        dicas: [
+          "Quem mantém o documento recebe uma notificação 30 dias antes da revisão e, se atrasar, de novo a cada semana.",
+          "Documento revogado sai do assistente e da busca padrão, mas continua no repositório. Regras do motor baseadas nele ganham o aviso “Fonte revogada: revise”.",
+          "Revogar, restabelecer e registrar revisão ficam na auditoria.",
         ],
       },
       {
@@ -266,6 +288,7 @@ export const GRUPOS: Grupo[] = [
           "O Simulador mostra a pontuação de cada regra para uma pergunta e se ela responde, pede esclarecimento ou segue para a busca.",
           "Editar uma regra publicada a devolve para rascunho: ela só volta a responder depois de publicada de novo. Cada publicação gera uma versão.",
           "Quem não pode consultar o documento que fundamenta a regra recebe só o encaminhamento ao setor, sem o conteúdo.",
+          "Regra cuja fonte foi revogada aparece com o aviso “Fonte revogada: revise”. Enquanto não for revisada, ela continua respondendo, mas com um alerta de revogação e o selo “Confira com atenção”. Atualize a resposta e troque a fonte pelo documento que substituiu a antiga.",
         ],
       },
       {

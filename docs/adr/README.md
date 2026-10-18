@@ -18,3 +18,4 @@ Formato `ADR-NNN-titulo.md`. Status inicial **Proposta**; ADR aceita não se edi
 | [ADR-012](ADR-012-avaliacao-e-lacunas-do-assistente.md) | Avaliação das respostas e lacunas do assistente | Proposta | 2026-10-18 |
 | [ADR-013](ADR-013-colecoes.md) | Coleções pessoais e institucionais sem efeito sobre permissões | Proposta | 2026-10-18 |
 | [ADR-014](ADR-014-ajuda-por-perfil.md) | Ajuda contextual por perfil, com conteúdo versionado no código | Proposta | 2026-10-18 |
+| [ADR-015](ADR-015-vigencia-e-revisao.md) | Vigência e revisão periódica de documentos | Proposta | 2026-10-18 |

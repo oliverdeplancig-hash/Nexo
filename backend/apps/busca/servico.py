@@ -63,7 +63,10 @@ def documentos_filtrados(usuario, filtros: dict | None = None, documento_id: int
     qs = documentos_visiveis(usuario, Acao.CONSULTAR)
     f = filtros or {}
     if documento_id:
-        qs = qs.filter(id=documento_id)
+        qs = qs.filter(id=documento_id)  # pergunta sobre um documento específico: vale mesmo se revogado
+    elif str(f.get("revogados", "")).lower() not in ("1", "true", "sim"):
+        # Documento revogado não alimenta a busca nem o assistente por padrão (ADR-015).
+        qs = qs.exclude(vigencia="revogado")
     if f.get("tipo"):
         qs = qs.filter(tipo_arquivo__in=_lista(f["tipo"]))
     if f.get("setor"):
