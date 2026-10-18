@@ -1,0 +1,56 @@
+# API
+
+Base: `/api/v1/`. Autenticação por sessão; escrita exige cabeçalho `X-CSRFToken`.
+Paginação: `?page=N&tamanho=M` → `{count, next, previous, results}`.
+
+## Autenticação
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `auth/csrf/` | Emite cookie CSRF |
+| POST | `auth/entrar/` | `{usuario, senha}` |
+| POST | `auth/sair/` | Encerra a sessão |
+| GET | `auth/eu/` | Usuário, setor, perfis e funções |
+
+## Documentos e acesso
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `documentos/` | `aba=todos\|meus\|favoritos\|recentes\|compartilhados`, `q`, `tipo`, `setor`, `categoria`, `colecao`, `de`, `ate`, `ordem` |
+| GET/PATCH/DELETE | `documentos/{id}/` | Detalhe (registra acesso) · editar · arquivar |
+| GET | `documentos/{id}/arquivo/[?download=1]` | Arquivo (visualizar/baixar), auditado |
+| GET | `documentos/{id}/conteudo/[?pagina=N]` | Trechos para visualização textual |
+| POST/DELETE | `documentos/{id}/favorito/` | Favoritar |
+| GET | `documentos/{id}/referencia/` | Referência para copiar |
+| POST | `documentos/{id}/compartilhar/` | `{usuario\|setor\|perfil, acoes, valido_ate, motivo}` |
+| GET | `acesso/documentos/{id}/minhas/` | Ações do usuário e motivos |
+| GET/POST | `acesso/documentos/{id}/matriz/` | Matriz de autorizações · conceder |
+| DELETE | `acesso/autorizacoes/{id}/` | Revogar |
+| GET/POST | `colecoes/` · GET `categorias/` | Coleções e categorias |
+
+## Ingestão
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `ingestao/importar/` | multipart: `arquivos[]` + metadados + `setores_autorizados[]`, `perfis_autorizados[]` |
+| GET | `ingestao/fila/` | Envios do usuário com etapas |
+| POST | `ingestao/documentos/{id}/nova-versao/` | multipart `arquivo` |
+| POST | `ingestao/documentos/{id}/reprocessar/` | Reprocessa |
+
+## Busca, setores, motor, conversas, auditoria
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `busca/?q=&modo=hibrida\|texto\|semantica\|nome` | Resultados agrupados por documento + facetas |
+| GET | `setores/` · `setores/quem-pode-ajudar/?pergunta=` | Diretório e roteamento |
+| CRUD | `motor/regras/` · POST `{id}/publicar/` · GET `{id}/versoes/` · POST `simular/` | Motor determinístico |
+| GET | `conversas/` · `conversas/{id}/mensagens/` | Histórico |
+| POST | `conversas/perguntar/` | `{texto, conversa_id?, documento_id?}` sem streaming |
+| GET | `auditoria/eventos/` · `tipos/` · `integridade/` | Trilha |
+| GET/POST | `notificacoes/` · `contagem/` · `{id}/ler/` · `ler-todas/` | Notificações |
+| CRUD | `usuarios/`, `perfis/` · GET `funcoes/` | Administração |
+| GET | `saude/` · `status/` | Monitoramento |
+
+## WebSocket `/ws/chat/`
+Cliente → `{"tipo":"mensagem","texto","conversa_id?","documento_id?"}`, `{"tipo":"interromper"}`, `{"tipo":"ping"}`.
+Servidor → `pronto`, `conversa`, `pergunta_registrada`, `status` (`analisando`, `consultando_fontes`, `gerando`),
+`token`, `aviso` (`ia_indisponivel`), `resposta`, `erro`, `pong`. Fechamento `4401` = sessão inválida.
+
+## WebSocket `/ws/eventos/`
+Servidor → `notificacao`, `processamento` (progresso da ingestão do próprio usuário).

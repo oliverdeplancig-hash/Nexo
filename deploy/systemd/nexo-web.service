@@ -1,0 +1,18 @@
+[Unit]
+Description=Nexo — aplicação web (ASGI/daphne)
+After=network.target postgresql.service
+
+[Service]
+User=nexo
+Group=nexo
+WorkingDirectory=/opt/nexo/backend
+EnvironmentFile=/opt/nexo/backend/.env
+ExecStart=/opt/nexo/backend/.venv/bin/daphne -b 127.0.0.1 -p 8000 --proxy-headers nexo.asgi:application
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/nexo
+
+[Install]
+WantedBy=multi-user.target

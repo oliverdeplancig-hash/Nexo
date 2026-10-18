@@ -1,0 +1,17 @@
+from django.urls import path
+from rest_framework.routers import DefaultRouter
+
+from . import views
+
+router = DefaultRouter()
+router.register("usuarios", views.UsuarioViewSet, basename="usuario")
+router.register("perfis", views.PerfilViewSet, basename="perfil")
+
+urlpatterns = [
+    path("auth/csrf/", views.csrf, name="auth-csrf"),
+    path("auth/entrar/", views.entrar, name="auth-entrar"),
+    path("auth/sair/", views.sair, name="auth-sair"),
+    path("auth/eu/", views.eu, name="auth-eu"),
+    path("funcoes/", views.funcoes, name="funcoes"),
+    *router.urls,
+]

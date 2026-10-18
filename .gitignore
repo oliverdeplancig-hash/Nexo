@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+backend/.env
+backend/staticfiles/
+backend/armazenamento/
+backend/.armazenamento-testes/
+# Node
+node_modules/
+frontend/dist/
+frontend/dev-dist/
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
+.env

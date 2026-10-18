@@ -1,0 +1,16 @@
+Nome	Significado / conceito
+SABER	Conhecimento institucional centralizado.
+FAROL	Orientação, direcionamento e acesso à informação.
+NEXO	Conexão entre documentos, setores e pessoas.
+ATLAS	Mapa do conhecimento e dos procedimentos da instituição.
+PRISMA	Diferentes perspectivas sobre o conhecimento institucional.
+SIGMA	Sistema integrado de gestão e memória administrativa.
+ORBE	Ambiente integrado de informações.
+ELos	Elo entre setores, documentos e servidores.
+PMIA	Polícia Militar + Inteligência Artificial.
+RIMA	Repositório Integrado de Memória e Arquivos.
+FIEL	Confiança, integridade e responsabilidade institucional.
+GUARÁ	Identidade brasileira, vigilância e proteção.
+BRAVO	Identidade operacional, força e prontidão.
+LUMEN	Luz, clareza e descoberta de informações.
+DOCIA	Documentos + Inteligência Artificial.

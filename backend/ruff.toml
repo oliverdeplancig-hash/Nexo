@@ -1,0 +1,7 @@
+line-length = 120
+target-version = "py311"
+extend-exclude = ["**/migrations/*"]
+
+[lint]
+select = ["E", "F", "W", "I", "B", "UP", "DJ"]
+ignore = ["B904", "DJ001", "DJ008", "DJ012", "B017", "E501"]

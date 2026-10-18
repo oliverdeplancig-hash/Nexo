@@ -1,0 +1,20 @@
+# Somente para DESENVOLVIMENTO local. O servidor da instituição não usa Docker
+# (ver docs/architecture/implantacao.md).
+services:
+  banco:
+    image: pgvector/pgvector:pg15
+    environment:
+      POSTGRES_USER: nexo
+      POSTGRES_PASSWORD: nexo
+      POSTGRES_DB: nexo
+    ports: ["5432:5432"]
+    volumes: [banco:/var/lib/postgresql/data]
+
+  ollama:
+    image: ollama/ollama:latest
+    ports: ["11434:11434"]
+    volumes: [ollama:/root/.ollama]
+
+volumes:
+  banco:
+  ollama:

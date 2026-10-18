@@ -1,0 +1,203 @@
+"""Configurações do Nexo.
+
+Todas as variáveis sensíveis ou dependentes de ambiente vêm do arquivo `.env`
+(ver `.env.example` na raiz do backend). Nenhum segredo deve ser versionado.
+"""
+
+from pathlib import Path
+
+import environ
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+env = environ.Env()
+environ.Env.read_env(BASE_DIR / ".env", overwrite=False)
+
+# --------------------------------------------------------------------------
+# Núcleo
+# --------------------------------------------------------------------------
+SECRET_KEY = env("NEXO_SECRET_KEY", default="dev-inseguro-troque-em-producao")
+DEBUG = env.bool("NEXO_DEBUG", default=False)
+ALLOWED_HOSTS = env.list("NEXO_ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
+CSRF_TRUSTED_ORIGINS = env.list(
+    "NEXO_CSRF_TRUSTED_ORIGINS",
+    default=["http://localhost:5173", "http://127.0.0.1:5173"],
+)
+
+INSTALLED_APPS = [
+    "daphne",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.postgres",
+    "rest_framework",
+    "channels",
+    # Apps do Nexo
+    "apps.comum",
+    "apps.organizacao",
+    "apps.contas",
+    "apps.acesso",
+    "apps.documentos",
+    "apps.ingestao",
+    "apps.busca",
+    "apps.motor",
+    "apps.ia",
+    "apps.conversas",
+    "apps.auditoria",
+    "apps.notificacoes",
+]
+
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+ROOT_URLCONF = "nexo.urls"
+WSGI_APPLICATION = "nexo.wsgi.application"
+ASGI_APPLICATION = "nexo.asgi.application"
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ]
+        },
+    }
+]
+
+# --------------------------------------------------------------------------
+# Banco de dados — PostgreSQL (>= 15) com as extensões vector e unaccent
+# --------------------------------------------------------------------------
+DATABASES = {"default": env.db("NEXO_DATABASE_URL", default="postgres://nexo:nexo@localhost:5432/nexo")}
+DATABASES["default"]["CONN_MAX_AGE"] = env.int("NEXO_DB_CONN_MAX_AGE", default=60)
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+AUTH_USER_MODEL = "contas.Usuario"
+
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 10}},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+# --------------------------------------------------------------------------
+# Localização
+# --------------------------------------------------------------------------
+LANGUAGE_CODE = "pt-br"
+TIME_ZONE = env("NEXO_TIME_ZONE", default="America/Bahia")
+USE_I18N = True
+USE_TZ = True
+
+# --------------------------------------------------------------------------
+# Arquivos
+# --------------------------------------------------------------------------
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Os documentos NUNCA são servidos diretamente pelo servidor web: o download
+# passa por uma view que aplica o motor de permissões e registra auditoria.
+NEXO_ARMAZENAMENTO_DIR = Path(env("NEXO_ARMAZENAMENTO_DIR", default=str(BASE_DIR / "armazenamento")))
+NEXO_UPLOAD_MAX_MB = env.int("NEXO_UPLOAD_MAX_MB", default=50)
+NEXO_FORMATOS_ACEITOS = [".pdf", ".docx", ".txt", ".md", ".html", ".htm"]
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+
+# --------------------------------------------------------------------------
+# Segurança de sessão
+# --------------------------------------------------------------------------
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_AGE = env.int("NEXO_SESSAO_SEGUNDOS", default=8 * 60 * 60)
+SESSION_COOKIE_SECURE = env.bool("NEXO_COOKIE_SEGURO", default=not DEBUG)
+CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
+CSRF_COOKIE_HTTPONLY = False  # o SPA lê o token para enviar no cabeçalho X-CSRFToken
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "SAMEORIGIN"  # o visualizador de PDF usa iframe da mesma origem
+
+# --------------------------------------------------------------------------
+# Django REST Framework
+# --------------------------------------------------------------------------
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_PAGINATION_CLASS": "apps.comum.paginacao.PaginacaoPadrao",
+    "PAGE_SIZE": 20,
+    "DATETIME_FORMAT": "%Y-%m-%dT%H:%M:%S%z",
+    "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.UserRateThrottle"],
+    "DEFAULT_THROTTLE_RATES": {"user": env("NEXO_LIMITE_REQUISICOES", default="600/min")},
+}
+
+# --------------------------------------------------------------------------
+# Channels (WebSocket)
+# Local/usuário único: InMemory. Servidor com vários processos: Redis.
+# --------------------------------------------------------------------------
+_REDIS_URL = env("NEXO_REDIS_URL", default="")
+if _REDIS_URL:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {"hosts": [_REDIS_URL]},
+        }
+    }
+else:
+    CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+
+# --------------------------------------------------------------------------
+# Inteligência artificial (ver docs/architecture/ia-e-motor.md)
+# --------------------------------------------------------------------------
+NEXO_IA = {
+    # "ollama" em produção; "falso" em testes e demonstrações sem LLM.
+    "PROVEDOR": env("NEXO_IA_PROVEDOR", default="ollama"),
+    "OLLAMA_URL": env("NEXO_OLLAMA_URL", default="http://localhost:11434"),
+    "MODELO_CHAT": env("NEXO_MODELO_CHAT", default="qwen2.5:7b-instruct"),
+    "MODELO_EMBEDDING": env("NEXO_MODELO_EMBEDDING", default="bge-m3"),
+    # Alterar a dimensão exige nova migração do campo Trecho.embedding.
+    "DIMENSAO_EMBEDDING": env.int("NEXO_DIMENSAO_EMBEDDING", default=1024),
+    "TEMPERATURA": env.float("NEXO_TEMPERATURA", default=0.1),
+    "CONTEXTO_MAX_TRECHOS": env.int("NEXO_CONTEXTO_MAX_TRECHOS", default=6),
+    "SIMILARIDADE_MINIMA": env.float("NEXO_SIMILARIDADE_MINIMA", default=0.45),
+    "TIMEOUT_SEGUNDOS": env.float("NEXO_IA_TIMEOUT", default=120.0),
+}
+
+NEXO_MOTOR = {
+    # Pontuação mínima para o motor determinístico responder sem LLM.
+    "LIMIAR": env.float("NEXO_MOTOR_LIMIAR", default=0.62),
+    # Se as duas melhores regras ficarem a menos desta distância, o motor
+    # pede desambiguação em vez de escolher sozinho.
+    "MARGEM_AMBIGUIDADE": env.float("NEXO_MOTOR_MARGEM", default=0.04),
+}
+
+NEXO_INGESTAO = {
+    "TAMANHO_TRECHO": env.int("NEXO_TAMANHO_TRECHO", default=1200),
+    "SOBREPOSICAO": env.int("NEXO_SOBREPOSICAO_TRECHO", default=200),
+    # Processa a fila na própria requisição (útil em instalação local de um usuário).
+    "PROCESSAR_IMEDIATAMENTE": env.bool("NEXO_PROCESSAR_IMEDIATAMENTE", default=False),
+}
+
+# --------------------------------------------------------------------------
+# Logs
+# --------------------------------------------------------------------------
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"simples": {"format": "%(asctime)s %(levelname)s %(name)s %(message)s"}},
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "simples"}},
+    "root": {"handlers": ["console"], "level": env("NEXO_LOG_NIVEL", default="INFO")},
+}

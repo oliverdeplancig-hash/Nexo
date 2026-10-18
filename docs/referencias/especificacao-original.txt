@@ -1,0 +1,481 @@
+# PROJETO: REPOSITÓRIO INSTITUCIONAL + ASSISTENTE VIRTUAL IA
+
+## 1. Papel e objetivo
+
+Atue como um especialista sênior em UX/UI Design, Product Design e arquitetura de interfaces para sistemas corporativos governamentais.
+
+Projete uma aplicação web chamada **Assistente Institucional IA**, destinada a organizar documentos, centralizar o conhecimento institucional e oferecer um assistente virtual conversacional com inteligência artificial.
+
+O sistema deverá permitir que servidores pesquisem documentos, compreendam procedimentos, encontrem informações e recebam orientações institucionais por meio de uma interface simples e intuitiva.
+
+A aplicação começará funcionando localmente em um computador e posteriormente será disponibilizada no servidor da instituição para múltiplos usuários.
+
+Crie interfaces com aparência de produto real, prontas para servir como referência para implementação posterior com Python, Django REST Framework, PostgreSQL/pgvector, React e Material UI.
+
+## 2. Diretrizes visuais
+
+Adote uma identidade visual institucional, moderna e discreta.
+
+- Estilo: SaaS corporativo, governamental e profissional.
+- Interface: limpa, organizada, responsiva e acessível.
+- Fundo predominante: branco ou cinza muito claro.
+- Cor primária: azul-marinho institucional.
+- Cor secundária: azul médio.
+- Cor de destaque: azul-claro, utilizado com moderação.
+- Tipografia: Inter ou similar.
+- Ícones: Lucide ou equivalentes minimalistas.
+- Bordas: discretas, com cantos suavemente arredondados.
+- Sombras: leves e funcionais.
+- Espaçamento: consistente, priorizando legibilidade.
+- Evitar gradientes excessivos, efeitos decorativos, excesso de cards e aparência de landing page comercial.
+
+A interface deve transmitir confiança, organização, segurança e eficiência.
+
+Utilize textos em português brasileiro, datas no formato DD/MM/AAAA e horários no formato de 24 horas.
+
+Não invente logotipos oficiais, nomes de órgãos públicos ou marcas governamentais. Utilize um espaço reservado para a identidade visual da instituição.
+
+## 3. Estrutura principal da aplicação
+
+Crie um layout administrativo com três regiões principais:
+
+### A. Sidebar lateral
+
+A barra lateral deve ser persistente e recolhível, contendo:
+
+1. Logotipo ou identidade visual institucional.
+2. Nome: Assistente Institucional IA.
+3. Botão “Nova conversa”.
+4. Assistente IA.
+5. Repositório documental.
+6. Buscar documentos.
+7. Pastas e coleções.
+8. Documentos recentes.
+9. Favoritos.
+10. Compartilhamentos autorizados.
+11. Histórico de conversas.
+12. Setores e contatos.
+13. Notificações.
+14. Administração, quando autorizado.
+15. Auditoria, quando autorizado.
+16. Perfil e configurações do usuário.
+
+Os itens de menu devem respeitar as permissões do usuário autenticado.
+
+Na parte inferior, exibir avatar, nome do usuário, setor, perfil de acesso e opção de sair.
+
+### B. Área central
+
+A área central deverá adaptar seu conteúdo conforme o módulo selecionado.
+
+Ela poderá exibir o chat da IA, a biblioteca de documentos, resultados de pesquisa, detalhes de arquivos, informações de setores ou telas administrativas.
+
+### C. Painel contextual opcional
+
+Em telas de chat e visualização documental, permitir abrir um painel lateral com:
+
+- Fontes utilizadas pela IA.
+- Documentos relacionados.
+- Informações do arquivo.
+- Página ou trecho de origem.
+- Classificação de acesso.
+- Data da última atualização.
+- Ações permitidas ao usuário.
+
+O painel deve poder ser fechado para ampliar a área principal.
+
+## 4. Tela 01 — Dashboard inicial
+
+Crie um painel inicial para o servidor autenticado.
+
+Cabeçalho:
+- Saudação: “Olá, [Nome do usuário]”.
+- Texto: “O que você precisa encontrar hoje?”
+- Campo de pesquisa amplo com placeholder: “Pesquise documentos, normas, procedimentos ou faça uma pergunta...”
+- Botão para iniciar conversa com a IA.
+
+Área de acesso rápido:
+- Consultar documentos.
+- Fazer uma pergunta à IA.
+- Encontrar um setor.
+- Ver documentos recentes.
+
+Seção “Continuar de onde parou”:
+- Lista das conversas recentes.
+- Título da conversa.
+- Data da última interação.
+- Ação para continuar.
+
+Seção “Documentos recentes”:
+- Nome do documento.
+- Tipo do arquivo.
+- Setor responsável.
+- Data de atualização.
+- Classificação de acesso, somente quando o usuário estiver autorizado a ver essa informação.
+
+Seção “Acesso rápido aos setores”:
+- Nome do setor.
+- Descrição resumida de suas competências.
+- Canal institucional de contato, quando disponível e autorizado.
+
+Não exibir dados estatísticos ou documentos aos quais o usuário não tenha permissão.
+
+## 5. Tela 02 — Assistente virtual IA
+
+Esta é a tela mais importante do projeto.
+
+Crie uma interface de chat profissional, inspirada na simplicidade de ChatGPT e nas experiências de pesquisa documental corporativa.
+
+### Cabeçalho do chat
+
+- Título: “Assistente Institucional”.
+- Subtítulo: “Encontre informações e procedimentos da instituição”.
+- Indicador de disponibilidade do serviço.
+- Botão para nova conversa.
+- Menu de opções adicionais.
+
+### Estado inicial
+
+Quando nenhuma conversa estiver iniciada, exibir:
+
+Título central:
+
+“Como posso ajudar você hoje?”
+
+Subtítulo:
+
+“Consulte documentos autorizados, entenda procedimentos e descubra qual setor pode ajudar.”
+
+Apresentar sugestões clicáveis:
+
+- “Como funciona determinado procedimento?”
+- “Quais documentos preciso apresentar?”
+- “Onde encontro a norma sobre este assunto?”
+- “Qual setor é responsável por essa demanda?”
+- “Resuma um documento autorizado.”
+- “Encontre documentos relacionados a um tema.”
+
+### Área de mensagens
+
+As mensagens do usuário e do assistente devem ter hierarquia visual clara.
+
+A resposta da IA poderá incluir:
+
+- Texto explicativo.
+- Listas numeradas.
+- Etapas de procedimentos.
+- Tabelas simples.
+- Trechos de documentos.
+- Referências e citações.
+- Links internos para documentos autorizados.
+- Indicação de setor responsável.
+- Orientações para solicitar acesso.
+
+### Fontes e citações
+
+Abaixo de cada resposta fundamentada em documentos, exibir uma seção chamada “Fontes consultadas”.
+
+Cada fonte poderá apresentar:
+
+- Nome do documento.
+- Tipo de arquivo.
+- Página ou seção.
+- Trecho utilizado.
+- Data da versão.
+- Botão “Abrir documento”, somente se o usuário tiver autorização.
+
+As referências devem ser visualmente distintas do texto gerado pela IA.
+
+Não simular fontes reais ou afirmar que documentos foram consultados quando isso não ocorreu.
+
+### Campo de mensagem
+
+Na parte inferior da tela, criar um compositor fixo com:
+
+- Campo de texto multilinha.
+- Placeholder: “Digite sua pergunta sobre documentos ou procedimentos institucionais...”
+- Botão de enviar.
+- Botão para anexar arquivo, somente quando habilitado.
+- Indicador de processamento.
+- Possibilidade de interromper a geração da resposta.
+
+Mostrar uma observação discreta:
+
+“Confira as fontes e os procedimentos oficiais antes de tomar decisões administrativas.”
+
+### Estados de interação
+
+Desenhar os estados visuais de:
+
+- Resposta em geração.
+- Pesquisa documental em andamento.
+- Nenhum resultado encontrado.
+- Falha temporária de conexão.
+- Reconexão do chat.
+- Resposta sem fontes suficientes.
+- Documento indisponível para o perfil atual.
+
+Preparar a interface para comunicação em tempo real via WebSocket, com respostas progressivas e notificações de status.
+
+## 6. Tela 03 — Repositório documental
+
+Criar uma biblioteca central de documentos com visualização em tabela e opção de alternar para grade.
+
+### Cabeçalho
+
+Título: “Repositório documental”.
+
+Descrição: “Consulte e organize os documentos institucionais disponíveis para seu perfil.”
+
+Botões:
+- Adicionar documento.
+- Nova pasta ou coleção.
+- Importar documentos, conforme permissão.
+
+### Barra de pesquisa
+
+Incluir:
+
+- Busca por nome do documento.
+- Pesquisa pelo conteúdo.
+- Pesquisa por palavras-chave.
+- Pesquisa semântica.
+- Filtros por tipo, setor, data e classificação de acesso, conforme autorização.
+
+### Navegação
+
+Exibir:
+- Todos os documentos autorizados.
+- Meus documentos.
+- Pastas e coleções.
+- Favoritos.
+- Documentos recentes.
+- Compartilhados comigo.
+
+### Tabela documental
+
+Colunas:
+
+- Nome.
+- Tipo.
+- Setor responsável.
+- Categoria.
+- Atualização.
+- Responsável pelo documento, quando permitido.
+- Ações.
+
+As ações podem incluir visualizar, abrir, baixar, favoritar, compartilhar e editar, conforme as permissões do usuário.
+
+Permitir ordenação, paginação e seleção de múltiplos documentos para operações autorizadas.
+
+Criar estados vazios, de carregamento, de erro e de pesquisa sem resultados.
+
+## 7. Tela 04 — Visualização de documento
+
+Criar um visualizador documental com aparência profissional.
+
+Layout em duas colunas:
+
+Coluna principal:
+- Visualizador de PDF ou conteúdo textual.
+- Navegação entre páginas.
+- Zoom.
+- Pesquisa no documento.
+- Navegação por trechos relevantes.
+
+Painel lateral:
+- Nome completo.
+- Tipo do arquivo.
+- Setor responsável.
+- Categoria documental.
+- Data de publicação.
+- Última atualização.
+- Versão.
+- Palavras-chave.
+- Classificação de acesso, se permitida.
+
+Ações:
+- Perguntar à IA sobre este documento.
+- Resumir documento.
+- Encontrar trechos específicos.
+- Adicionar aos favoritos.
+- Copiar referência.
+- Baixar, se permitido.
+
+Ao acionar “Perguntar à IA sobre este documento”, abrir o chat com contexto limitado ao documento e às permissões atuais do usuário.
+
+## 8. Tela 05 — Busca inteligente
+
+Criar uma tela para localizar informações no repositório.
+
+A pesquisa deve permitir consultar simultaneamente nomes, conteúdo textual e significado semântico.
+
+Exibir:
+- Campo de busca.
+- Filtros laterais.
+- Quantidade de resultados autorizados.
+- Lista de documentos.
+- Trechos que correspondem à pesquisa.
+- Destaque das palavras encontradas.
+- Página ou seção de origem.
+- Botão para abrir documento.
+- Botão para perguntar à IA sobre o resultado.
+
+Criar filtros por:
+- Tipo de arquivo.
+- Setor responsável.
+- Período.
+- Categoria.
+- Palavras-chave.
+
+Os filtros de classificação e setor não devem revelar a existência de conteúdos restritos a usuários não autorizados.
+
+## 9. Tela 06 — Diretório de setores e contatos
+
+Criar um módulo que permita ao assistente orientar usuários sobre informações que não estejam disponíveis no seu setor.
+
+Exibir uma lista ou grade com:
+- Nome do setor.
+- Competências.
+- Tipos de demanda atendidos.
+- Serviços prestados.
+- Procedimentos relacionados.
+- Canal institucional de contato.
+- Horário de atendimento, quando cadastrado.
+- Orientação para solicitar informações ou acesso.
+
+Incluir campo de pesquisa:
+
+“Qual setor pode me ajudar?”
+
+Exemplos de pesquisa:
+- “Preciso de informações sobre determinado procedimento.”
+- “Quem é responsável por este assunto?”
+- “Onde devo solicitar acesso a um documento?”
+
+A IA poderá apresentar informações de direcionamento autorizadas, mesmo quando o conteúdo documental do outro setor for restrito.
+
+Não inventar contatos, atribuições ou nomes de servidores. Utilizar dados cadastrados no diretório institucional.
+
+## 10. Tela 07 — Cadastro e importação de documentos
+
+Criar uma interface para administradores e servidores autorizados.
+
+Campos:
+- Selecionar arquivos.
+- Título.
+- Descrição.
+- Categoria.
+- Setor responsável.
+- Palavras-chave.
+- Data do documento.
+- Número ou código de referência, quando aplicável.
+- Classificação de acesso.
+- Perfis autorizados.
+- Setores autorizados.
+- Responsável pela manutenção.
+- Status de processamento.
+
+Permitir carregamento de vários arquivos e apresentar o progresso individual de cada um.
+
+Exibir etapas de processamento:
+1. Arquivo recebido.
+2. Extração de conteúdo.
+3. Identificação de metadados.
+4. Indexação para pesquisa.
+5. Disponibilização para consulta.
+
+O documento só poderá ser disponibilizado para busca e chat após o processamento e a aplicação das permissões terem sido concluídos com sucesso.
+
+Criar mensagens de erro para arquivos corrompidos, formatos não suportados e falhas de extração.
+
+## 11. Tela 08 — Administração de usuários e permissões
+
+Criar uma área administrativa protegida.
+
+Funcionalidades:
+- Cadastro de usuários.
+- Ativação e desativação de contas.
+- Associação de usuários a setores.
+- Cadastro de perfis.
+- Atribuição de permissões.
+- Definição de acessos compartilhados.
+- Gerenciamento de permissões por documento.
+- Histórico de alterações.
+
+Criar uma matriz visual de permissões com ações de consultar, visualizar, baixar, editar, administrar e compartilhar.
+
+Os administradores devem visualizar apenas as funções e os dados compatíveis com suas atribuições. A administração de permissões críticas deve ser restrita e auditada.
+
+## 12. Tela 09 — Auditoria e histórico
+
+Criar um painel para usuários administrativos autorizados.
+
+Exibir eventos como:
+- Login e encerramento de sessão.
+- Abertura e download de documentos.
+- Alterações nas permissões.
+- Inclusão e atualização de arquivos.
+- Consultas realizadas ao assistente.
+- Falhas de autorização.
+- Alterações administrativas.
+
+Filtros:
+- Período.
+- Usuário.
+- Setor.
+- Tipo de evento.
+- Resultado.
+
+Evitar exibir o conteúdo integral de conversas e documentos em relatórios de auditoria sem necessidade e autorização específicas.
+
+## 13. Responsividade e acessibilidade
+
+Desenhar versões para:
+- Desktop.
+- Notebook.
+- Tablet.
+- Smartphone.
+
+No desktop, priorizar a navegação por sidebar e a visualização simultânea do chat e das fontes.
+
+No smartphone, transformar a sidebar em menu recolhível, manter o campo de mensagem acessível e adaptar tabelas para listas responsivas.
+
+Seguir boas práticas de acessibilidade, contraste, navegação por teclado, estados de foco, textos de apoio e áreas de interação adequadas.
+
+## 14. Requisitos técnicos para orientar o design
+
+A interface deverá ser compatível conceitualmente com:
+
+- Frontend: React e Material UI.
+- Backend: Python, Django e Django REST Framework.
+- Comunicação em tempo real: WebSocket com Django Channels.
+- Banco de dados: PostgreSQL com pgvector.
+- Busca documental: pesquisa textual e semântica.
+- Arquivos: armazenamento protegido.
+- IA: arquitetura RAG com citações.
+- Autenticação e autorização: controles implementados no backend.
+
+O Google Stitch deve se concentrar no design das interfaces, nos componentes reutilizáveis, nos estados visuais e nos fluxos de navegação. Não presumir que o protótipo visual implementará autenticação real, WebSocket, banco de dados ou segurança documental.
+
+## 15. Entregáveis esperados
+
+Gerar telas visualmente consistentes, com um design system reutilizável e componentes padronizados.
+
+Priorizar a produção nesta ordem:
+
+1. Dashboard inicial.
+2. Assistente virtual IA.
+3. Repositório documental.
+4. Visualização de documentos.
+5. Busca inteligente.
+6. Diretório de setores.
+7. Importação de documentos.
+8. Administração de usuários e permissões.
+9. Auditoria.
+
+Manter a mesma sidebar, cabeçalho, tipografia, paleta, espaçamento, botões, tabelas, campos e estados de interação em todas as telas.
+
+O resultado deve parecer um sistema institucional pronto para evoluir para produção, não uma apresentação conceitual.
+
+Priorize clareza, rapidez de navegação, segurança percebida, facilidade de manutenção e eficiência no trabalho diário dos servidores.
