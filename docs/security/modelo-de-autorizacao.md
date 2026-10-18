@@ -25,7 +25,7 @@ Implicações: administrar ⇒ todas; editar/baixar/compartilhar ⇒ visualizar 
 - Fontes de mensagens antigas são reavaliadas a cada leitura.
 - WebSocket: origem validada, sessão exigida, usuário recarregado por mensagem, sem grupos compartilhados.
 
-## Avaliações e lacunas do assistente
+## Avaliações e lacunas do assistente (ADR-012)
 - Só o autor da pergunta avalia a resposta (mensagem de outra pessoa → 404).
 - A lista de lacunas (função `gerir_regras`) mostra a **pergunta**, a origem da resposta, a avaliação e o
   comentário — **sem o autor** (nem nome, nem setor) e **sem o texto da resposta**, que pode conter trechos de
@@ -34,9 +34,9 @@ Implicações: administrar ⇒ todas; editar/baixar/compartilhar ⇒ visualizar 
 - Apagar a conversa apaga a pergunta, a avaliação e a lacuna. Tratar ou reabrir lacuna gera evento
   `LACUNA_TRATADA` na auditoria.
 
-## Coleções
+## Coleções (ADR-013)
 - Coleção agrupa documentos e **não concede acesso**: quem abre a coleção vê só os documentos autorizados
   para si (`documentos_visiveis`). Só entram numa coleção documentos que quem organiza pode consultar.
 - Coleção pessoal: visível, editável e excluível só por quem criou; não aparece (nem pelo nome) para outras
   pessoas, inclusive na tela do documento e no filtro `?colecao=`. Coleção institucional: todos veem;
-  alterar exige `gerir_colecoes`. Regras em `apps/documentos/colecoes.py`.
+  alterar exige `gerir_colecoes`. Regras em `apps/documentos/colecoes.py` (ADR-013).

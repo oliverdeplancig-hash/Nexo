@@ -1,5 +1,5 @@
 /**
- * Conteúdo da Ajuda. Cada tópico aparece só para quem tem a função indicada em `funcao`
+ * Conteúdo da Ajuda (ADR-014). Cada tópico aparece só para quem tem a função indicada em `funcao`
  * (sem `funcao`: para todos). `telas` liga o tópico às telas: o botão "?" abre a Ajuda já no
  * tópico da tela em que a pessoa está.
  *

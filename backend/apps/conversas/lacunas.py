@@ -1,4 +1,4 @@
-"""Avaliação das respostas e lacunas do assistente.
+"""Avaliação das respostas e lacunas do assistente (ADR-012).
 
 - O autor da pergunta avalia a resposta (útil / não útil, motivo e comentário).
 - Quem gere as regras do motor vê as **lacunas**: respostas sem fontes suficientes, respostas só com trechos

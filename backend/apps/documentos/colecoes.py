@@ -1,4 +1,4 @@
-"""Regras das coleções (pastas). Uma coleção agrupa documentos e NUNCA altera permissões (ADR-005).
+"""Regras das coleções (pastas) — ADR-013. Uma coleção agrupa documentos e NUNCA altera permissões (ADR-005).
 
 - Coleção pessoal: só quem criou vê, edita, exclui e organiza.
 - Coleção institucional: todos veem; editar, excluir e organizar exige a função `gerir_colecoes`.
