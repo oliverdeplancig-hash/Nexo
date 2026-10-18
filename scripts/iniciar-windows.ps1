@@ -36,8 +36,12 @@ try {
 
     Write-Host "[2/5] Iniciando PostgreSQL local..."
     Push-Location $backend
-    & $py banco_local.py iniciar
-    if ($LASTEXITCODE -ne 0) { throw "Falha ao iniciar o PostgreSQL local." }
+    # Janela oculta e propria: fechar este terminal nao derruba o PostgreSQL.
+    $banco = Start-Process -FilePath $py -ArgumentList "banco_local.py", "iniciar" -WorkingDirectory $backend `
+        -WindowStyle Hidden -PassThru
+    $banco.WaitForExit()
+    if ($banco.ExitCode -ne 0) { throw "Falha ao iniciar o PostgreSQL local (veja backend\.pgdata\log)." }
+    Write-Host "      PostgreSQL local em execucao."
 
     Write-Host "[3/5] Preparando o banco..."
     & $py manage.py migrate --noinput
@@ -45,7 +49,20 @@ try {
     & $py manage.py carregar_demo
     Pop-Location
 
+    # IA local: se o .env usa Ollama, garante que ele esteja ligado.
+    if (Select-String -Path $envArq -Pattern "^NEXO_IA_PROVEDOR=ollama" -Quiet) {
+        $ollama = (Get-Command ollama -ErrorAction SilentlyContinue).Source
+        if (-not $ollama) { $ollama = Join-Path $env:LOCALAPPDATA "Programs\Ollama\ollama.exe" }
+        $ativo = $false
+        try { Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:11434/api/tags" -TimeoutSec 3 | Out-Null; $ativo = $true } catch {}
+        if (-not $ativo -and (Test-Path $ollama)) {
+            Write-Host "      Ligando o Ollama..."
+            Start-Process -FilePath $ollama -ArgumentList "serve" -WindowStyle Hidden
+        }
+    }
+
     Write-Host "[4/5] Iniciando backend e frontend..."
+    Get-Process daphne -ErrorAction SilentlyContinue | Stop-Process -Force
     $daphne = Join-Path $backend ".venv\Scripts\daphne.exe"
     Start-Process -FilePath $daphne -ArgumentList "-b", "127.0.0.1", "-p", "8000", "nexo.asgi:application" `
         -WorkingDirectory $backend -WindowStyle Minimized `
@@ -57,8 +74,11 @@ try {
         & npm.cmd install --no-audit --no-fund
         Pop-Location
     }
-    Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev -- --host 127.0.0.1 > ..\scripts\frontend.log 2>&1" `
-        -WorkingDirectory $frontend -WindowStyle Minimized
+    $frontAtivo = Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction SilentlyContinue
+    if (-not $frontAtivo) {
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev -- --host 127.0.0.1 > ..\scripts\frontend.log 2>&1" `
+            -WorkingDirectory $frontend -WindowStyle Minimized
+    }
 
     Write-Host "[5/5] Aguardando os servicos..."
     for ($i = 0; $i -lt 60; $i++) {

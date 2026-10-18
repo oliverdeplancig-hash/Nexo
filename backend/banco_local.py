@@ -40,6 +40,28 @@ def garantir_fusos_horarios() -> bool:
     return True
 
 
+def limpar_pid_obsoleto() -> None:
+    """Após queda ou reinício do Windows, o postmaster.pid pode apontar para um PID
+    reaproveitado por outro processo. Se ninguém escuta na porta registrada, remove-o."""
+    import socket
+
+    pid_arquivo = PGDATA / "postmaster.pid"
+    if not pid_arquivo.exists():
+        return
+    linhas = pid_arquivo.read_text(encoding="utf-8", errors="ignore").splitlines()
+    try:
+        porta = int(linhas[3])
+    except (IndexError, ValueError):
+        porta = None
+    if porta:
+        with socket.socket() as s:
+            s.settimeout(1)
+            if s.connect_ex(("127.0.0.1", porta)) == 0:
+                return  # servidor ativo
+    pid_arquivo.unlink()
+    print("Registro de execucao antigo do PostgreSQL removido.")
+
+
 def parar() -> None:
     import subprocess
 
@@ -63,6 +85,7 @@ def main() -> int:
         return 0
     if garantir_fusos_horarios():
         parar()  # um servidor já em execução precisa reiniciar para carregar os fusos
+    limpar_pid_obsoleto()
     servidor = pgserver.get_server(PGDATA, cleanup_mode=None)
     existe = servidor.psql("SELECT 1 FROM pg_database WHERE datname = 'nexo';")
     if "(1 row)" not in existe and "(1 linha)" not in existe:
