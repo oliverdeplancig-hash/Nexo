@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import io
 import logging
+import os
 import shutil
 from functools import lru_cache
 
@@ -54,11 +55,14 @@ class OCRTesseract(MotorOCR):
             pytesseract.pytesseract.tesseract_cmd = caminho
         self.idioma = cfg["IDIOMA"]
         # Pasta própria de idiomas (ex.: backend/.tessdata no Windows, sem precisar de administrador).
-        self.config_dados = f'--tessdata-dir "{cfg["TESSDATA_DIR"]}"' if cfg.get("TESSDATA_DIR") else ""
+        # Usa a variável de ambiente padrão do Tesseract: no Windows, aspas em --tessdata-dir
+        # chegam literais ao executável.
+        if cfg.get("TESSDATA_DIR"):
+            os.environ["TESSDATA_PREFIX"] = str(cfg["TESSDATA_DIR"])
 
     def disponivel(self) -> bool:
         try:
-            idiomas = set(self._pytesseract.get_languages(config=self.config_dados))
+            idiomas = set(self._pytesseract.get_languages(config=""))
         except Exception:  # binário ausente ou inválido
             return False
         return all(i in idiomas for i in self.idioma.split("+"))
@@ -66,15 +70,12 @@ class OCRTesseract(MotorOCR):
     def reconhecer(self, imagem) -> str:
         try:
             # psm 3: segmentação automática de página (documentos administrativos comuns)
-            config = f"--psm 3 {self.config_dados}".strip()
-            return self._pytesseract.image_to_string(imagem, lang=self.idioma, config=config)
+            return self._pytesseract.image_to_string(imagem, lang=self.idioma, config="--psm 3")
         except Exception as erro:
             raise OCRIndisponivel(f"Falha no Tesseract: {erro}") from erro
 
 
 def _caminho_padrao_windows() -> str | None:
-    import os
-
     for base in (os.environ.get("ProgramFiles", ""), os.environ.get("LOCALAPPDATA", "") + "\\Programs"):
         candidato = os.path.join(base, "Tesseract-OCR", "tesseract.exe")
         if base and os.path.exists(candidato):

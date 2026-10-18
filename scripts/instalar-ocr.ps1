@@ -1,5 +1,8 @@
 ﻿# Instala o OCR (Tesseract + idioma portugues) para o Nexo no Windows. Ver ADR-009.
 $ErrorActionPreference = "Stop"
+# O PowerShell 5.1 usa TLS 1.0 por padrao; o GitHub exige TLS 1.2.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$ProgressPreference = "SilentlyContinue"
 $raiz = Split-Path -Parent $PSScriptRoot
 $backend = Join-Path $raiz "backend"
 $py = Join-Path $backend ".venv\Scripts\python.exe"
@@ -23,7 +26,7 @@ try {
     Write-Host "[2/3] Baixando o idioma portugues..."
     $tessdata = Join-Path $backend ".tessdata"
     New-Item -ItemType Directory -Force -Path $tessdata | Out-Null
-    foreach ($idioma in @("por", "osd")) {
+    foreach ($idioma in @("por")) {
         $destino = Join-Path $tessdata "$idioma.traineddata"
         if (-not (Test-Path $destino)) {
             Invoke-WebRequest -UseBasicParsing "https://github.com/tesseract-ocr/tessdata/raw/main/$idioma.traineddata" -OutFile $destino
@@ -34,7 +37,6 @@ try {
     Push-Location $backend
     & $py -m pip install --disable-pip-version-check -q -r requirements-local.txt
     & $py -c "import banco_local as b; b.gravar_env('NEXO_OCR_MOTOR','tesseract'); b.gravar_env('NEXO_TESSERACT_CMD', r'$exe'); b.gravar_env('NEXO_TESSDATA_DIR', r'$tessdata')"
-    & $py -c "import pytesseract; pytesseract.pytesseract.tesseract_cmd=r'$exe'; print('Idiomas:', pytesseract.get_languages(config=r'--tessdata-dir \"$tessdata\"'))"
     Pop-Location
     Write-Host "OCR instalado. Reinicie o Nexo (scripts\iniciar-windows.cmd)."
     Write-Host "PRONTO"
