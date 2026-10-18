@@ -20,3 +20,4 @@ Thumbs.db
 backend/.pgdata/
 scripts/*.log
 scripts/diagnostico.txt
+backend/.tessdata/

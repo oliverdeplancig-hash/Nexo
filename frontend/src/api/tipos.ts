@@ -82,6 +82,7 @@ export interface DocumentoDetalhe extends DocumentoLista {
   criado_em: string;
   colecoes: Colecao[];
   indexacao_semantica: boolean;
+  paginas_ocr: number;
   mensagem_erro: string;
 }
 

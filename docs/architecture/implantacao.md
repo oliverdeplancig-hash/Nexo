@@ -13,6 +13,9 @@ psql -U postgres -c "CREATE USER nexo WITH PASSWORD 'nexo';"
 psql -U postgres -c "CREATE DATABASE nexo OWNER nexo;"
 psql -U postgres -d nexo -c "CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS unaccent;"
 
+# OCR (documentos digitalizados) — ver ADR-009
+scripts\instalar-ocr.cmd
+
 # Modelos de IA
 ollama pull qwen2.5:7b-instruct
 ollama pull bge-m3
@@ -38,7 +41,7 @@ Ou use `scripts/iniciar-local.ps1`.
 
 ## 2. Servidor da instituição (Linux, sem Docker, PostgreSQL 15)
 
-1. Pacotes: `python3.11+ python3-venv postgresql-15-pgvector` (ou compilar o pgvector), Node apenas para
+1. Pacotes: `python3.11+ python3-venv postgresql-15-pgvector tesseract-ocr tesseract-ocr-por` (ou compilar o pgvector), Node apenas para
    gerar o build (pode ser feito em outra máquina).
 2. Usuário de sistema `nexo`; código em `/opt/nexo`; arquivos em `/var/lib/nexo/armazenamento` (fora da web).
 3. `.env` de produção: `NEXO_DEBUG=false`, `NEXO_SECRET_KEY` forte, `NEXO_ALLOWED_HOSTS`,

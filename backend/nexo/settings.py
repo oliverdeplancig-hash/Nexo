@@ -113,7 +113,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # passa por uma view que aplica o motor de permissões e registra auditoria.
 NEXO_ARMAZENAMENTO_DIR = Path(env("NEXO_ARMAZENAMENTO_DIR", default=str(BASE_DIR / "armazenamento")))
 NEXO_UPLOAD_MAX_MB = env.int("NEXO_UPLOAD_MAX_MB", default=50)
-NEXO_FORMATOS_ACEITOS = [".pdf", ".docx", ".txt", ".md", ".html", ".htm"]
+NEXO_FORMATOS_ACEITOS = [".pdf", ".docx", ".txt", ".md", ".html", ".htm", ".png", ".jpg", ".jpeg", ".tif", ".tiff"]
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
@@ -182,6 +182,15 @@ NEXO_MOTOR = {
     # Se as duas melhores regras ficarem a menos desta distância, o motor
     # pede desambiguação em vez de escolher sozinho.
     "MARGEM_AMBIGUIDADE": env.float("NEXO_MOTOR_MARGEM", default=0.04),
+}
+
+# OCR para documentos digitalizados (ADR-009). "tesseract" ou "desligado".
+NEXO_OCR = {
+    "MOTOR": env("NEXO_OCR_MOTOR", default="tesseract"),
+    "TESSERACT_CMD": env("NEXO_TESSERACT_CMD", default=""),
+    "TESSDATA_DIR": env("NEXO_TESSDATA_DIR", default=""),
+    "IDIOMA": env("NEXO_OCR_IDIOMA", default="por"),
+    "DPI": env.int("NEXO_OCR_DPI", default=300),
 }
 
 NEXO_INGESTAO = {

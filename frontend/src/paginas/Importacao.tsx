@@ -30,7 +30,7 @@ const ETAPAS = [
   { chave: "indexando", rotulo: "Indexação para pesquisa" },
   { chave: "disponivel", rotulo: "Disponibilização para consulta" },
 ];
-const ACEITOS = ".pdf,.docx,.txt,.md,.html,.htm";
+const ACEITOS = ".pdf,.docx,.txt,.md,.html,.htm,.png,.jpg,.jpeg,.tif,.tiff";
 
 interface Envio {
   arquivo: File;
@@ -143,7 +143,7 @@ export default function Importacao() {
 
   return (
     <Pagina larga>
-      <Cabecalho titulo="Cadastro e importação de documentos" descricao="Envie um ou mais arquivos com os mesmos metadados e permissões. Formatos aceitos: PDF, DOCX, TXT, MD e HTML." />
+      <Cabecalho titulo="Cadastro e importação de documentos" descricao="Envie um ou mais arquivos com os mesmos metadados e permissões. Formatos aceitos: PDF, DOCX, TXT, MD, HTML e imagens digitalizadas (PNG, JPG, TIFF), lidas por OCR." />
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1fr) 420px" }, gap: 3 }}>
         <Box sx={{ display: "grid", gap: 2.5, alignContent: "start" }}>

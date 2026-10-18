@@ -7,6 +7,8 @@ import re
 from dataclasses import dataclass
 from html.parser import HTMLParser
 
+from .ocr import OCRIndisponivel, imagens_de_arquivo, obter_ocr, renderizar_pagina_pdf
+
 
 class FalhaExtracao(Exception):
     """Mensagem já vem pronta para o usuário."""
@@ -17,6 +19,12 @@ class Bloco:
     pagina: int | None
     secao: str
     texto: str
+    ocr: bool = False
+
+
+# Página com menos caracteres úteis que isto é tratada como digitalizada.
+MINIMO_CARACTERES_PAGINA = 25
+EXTENSOES_IMAGEM = (".png", ".jpg", ".jpeg", ".tif", ".tiff")
 
 
 _TITULO_MD = re.compile(r"^(#{1,4})\s+(.+)$")
@@ -32,6 +40,15 @@ def verificar_assinatura(conteudo: bytes, extensao: str) -> None:
         raise FalhaExtracao("O arquivo não é um PDF válido ou está corrompido.")
     if extensao == ".docx" and not conteudo.startswith(b"PK"):
         raise FalhaExtracao("O arquivo não é um DOCX válido ou está corrompido.")
+    assinaturas_imagem = {
+        ".png": (b"\x89PNG",),
+        ".jpg": (b"\xff\xd8",),
+        ".jpeg": (b"\xff\xd8",),
+        ".tif": (b"II*\x00", b"MM\x00*"),
+        ".tiff": (b"II*\x00", b"MM\x00*"),
+    }
+    if extensao in assinaturas_imagem and not conteudo.startswith(assinaturas_imagem[extensao]):
+        raise FalhaExtracao("O arquivo não é uma imagem válida ou está corrompido.")
 
 
 def extrair(conteudo: bytes, extensao: str) -> list[Bloco]:
@@ -39,6 +56,8 @@ def extrair(conteudo: bytes, extensao: str) -> list[Bloco]:
     try:
         if extensao == ".pdf":
             blocos = _pdf(conteudo)
+        elif extensao in EXTENSOES_IMAGEM:
+            blocos = _imagem(conteudo)
         elif extensao == ".docx":
             blocos = _docx(conteudo)
         elif extensao in (".txt", ".md"):
@@ -49,14 +68,19 @@ def extrair(conteudo: bytes, extensao: str) -> list[Bloco]:
             raise FalhaExtracao(f"Formato não suportado: {extensao}")
     except FalhaExtracao:
         raise
+    except OCRIndisponivel as erro:
+        raise FalhaExtracao(f"Não foi possível aplicar OCR: {erro}") from erro
     except Exception as erro:  # bibliotecas de terceiros lançam exceções variadas
         raise FalhaExtracao(f"Não foi possível ler o arquivo ({erro.__class__.__name__}).") from erro
 
     blocos = [b for b in blocos if b.texto.strip()]
     if not blocos:
+        if obter_ocr().disponivel():
+            raise FalhaExtracao("Nenhum texto pôde ser extraído, nem por OCR. Verifique a qualidade da digitalização.")
         raise FalhaExtracao(
-            "Nenhum texto pôde ser extraído. Se for um documento digitalizado (imagem), "
-            "é necessário aplicar OCR antes da importação."
+            "Nenhum texto pôde ser extraído. O documento parece digitalizado (imagem) e o OCR "
+            "não está disponível neste computador. Instale o Tesseract com o idioma português "
+            "(ver docs/architecture/implantacao.md) e use 'Tentar novamente'."
         )
     return blocos
 
@@ -81,14 +105,32 @@ def _pdf(conteudo: bytes) -> list[Bloco]:
             raise FalhaExtracao("O PDF está protegido por senha.") from erro
     blocos: list[Bloco] = []
     secao = ""
+    ocr = obter_ocr()
     for numero, pagina in enumerate(leitor.pages, start=1):
         texto = pagina.extract_text() or ""
+        por_ocr = False
+        if len("".join(texto.split())) < MINIMO_CARACTERES_PAGINA and ocr.disponivel():
+            texto = ocr.reconhecer(renderizar_pagina_pdf(conteudo, numero - 1))
+            por_ocr = True
         for linha in texto.splitlines():
             if _TITULO_NORMATIVO.match(linha.strip()) and len(linha.strip()) < 120:
                 secao = linha.strip()
                 break
-        blocos.append(Bloco(pagina=numero, secao=secao, texto=texto))
+        blocos.append(Bloco(pagina=numero, secao=secao, texto=texto, ocr=por_ocr))
     return blocos
+
+
+def _imagem(conteudo: bytes) -> list[Bloco]:
+    ocr = obter_ocr()
+    if not ocr.disponivel():
+        raise FalhaExtracao(
+            "Imagens dependem de OCR, que não está disponível neste computador. Instale o Tesseract "
+            "com o idioma português (ver docs/architecture/implantacao.md)."
+        )
+    return [
+        Bloco(pagina=numero, secao="", texto=ocr.reconhecer(imagem), ocr=True)
+        for numero, imagem in enumerate(imagens_de_arquivo(conteudo), start=1)
+    ]
 
 
 def _docx(conteudo: bytes) -> list[Bloco]:

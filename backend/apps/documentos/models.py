@@ -104,6 +104,9 @@ class Documento(ModeloComDatas):
     status = models.CharField(max_length=20, choices=StatusDocumento.choices, default=StatusDocumento.RECEBIDO)
     mensagem_erro = models.TextField(blank=True)
     indexacao_semantica = models.BooleanField(default=False)
+    paginas_ocr = models.PositiveIntegerField(
+        "páginas lidas por OCR", default=0, help_text="Texto obtido por reconhecimento óptico; pode conter erros."
+    )
     disponibilizado_em = models.DateTimeField(null=True, blank=True)
 
     class Meta:

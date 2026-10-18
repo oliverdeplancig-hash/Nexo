@@ -68,11 +68,21 @@ def processar(documento: Documento) -> Documento:
         texto_completo = "\n".join(b.texto for b in blocos)
         paginas = [b.pagina for b in blocos if b.pagina]
         documento.total_paginas = max(paginas) if paginas else None
+        documento.paginas_ocr = sum(1 for b in blocos if b.ocr)
         if not documento.palavras_chave:
             documento.palavras_chave = sugerir_palavras_chave(texto_completo)
         if not documento.numero_referencia:
             documento.numero_referencia = sugerir_referencia(texto_completo)
-        documento.save(update_fields=["total_paginas", "palavras_chave", "numero_referencia", "atualizado_em"])
+        documento.save(
+            update_fields=["total_paginas", "paginas_ocr", "palavras_chave", "numero_referencia", "atualizado_em"]
+        )
+        if documento.paginas_ocr:
+            EtapaProcessamento.objects.create(
+                documento=documento,
+                etapa=StatusDocumento.METADADOS,
+                situacao="aviso",
+                mensagem=f"Texto de {documento.paginas_ocr} página(s) obtido por OCR. Confira a qualidade da leitura.",
+            )
 
         _etapa(documento, StatusDocumento.INDEXANDO)
         gerados = fatiar(blocos, cfg["TAMANHO_TRECHO"], cfg["SOBREPOSICAO"])

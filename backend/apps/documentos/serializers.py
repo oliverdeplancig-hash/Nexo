@@ -103,6 +103,7 @@ class DocumentoDetalheSerializer(DocumentoListaSerializer):
             "criado_em",
             "colecoes",
             "indexacao_semantica",
+            "paginas_ocr",
             "mensagem_erro",
         ]
 

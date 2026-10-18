@@ -96,3 +96,24 @@ def test_busca_nao_revela_restritos_nem_em_facetas(usuarios, criar_documento, cl
     dados = cliente(usuarios["gp"]).get("/api/v1/busca/?q=orçamento").json()
     assert dados["total_documentos"] == 1
     assert [f["setor_responsavel__sigla"] for f in dados["facetas"]["setor"]] == ["GP"]
+
+
+@pytest.mark.skipif(not __import__("shutil").which("tesseract"), reason="Tesseract não instalado")
+def test_pdf_digitalizado_entra_na_busca_via_ocr(usuarios, setores, cliente):
+    from apps.ingestao.ocr import obter_ocr
+    from apps.ingestao.tests.test_ocr import _pdf_digitalizado
+
+    obter_ocr.cache_clear()
+    arquivo = SimpleUploadedFile("escaneado.pdf", _pdf_digitalizado(["Regimento interno", "Plantao de domingo"]))
+    resposta = cliente(usuarios["gestor"]).post(
+        "/api/v1/ingestao/importar/",
+        {"arquivos": [arquivo], "setor_responsavel": setores["GP"].id, "classificacao": "geral"},
+        format="multipart",
+    )
+    doc = Documento.objects.get(pk=resposta.json()["resultados"][0]["id"])
+    processar(doc)
+    doc.refresh_from_db()
+    assert doc.status == StatusDocumento.DISPONIVEL and doc.paginas_ocr == 1
+    assert doc.etapas.filter(situacao="aviso", mensagem__icontains="OCR").exists()
+    busca = cliente(usuarios["gp"]).get("/api/v1/busca/?q=regimento").json()
+    assert busca["resultados"][0]["documento"]["id"] == doc.id

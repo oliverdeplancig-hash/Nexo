@@ -103,7 +103,8 @@ export default function Documento() {
 
   const d = doc.data;
   const pode = (a: string) => d.acoes_permitidas.includes(a as never);
-  const pdf = d.tipo_arquivo === "pdf";
+  const imagem = ["png", "jpg", "jpeg", "tif", "tiff"].includes(d.tipo_arquivo);
+  const pdf = d.tipo_arquivo === "pdf" || (imagem && d.tipo_arquivo !== "tif" && d.tipo_arquivo !== "tiff");
   const totalPaginas = d.total_paginas ?? 1;
   const irPara = (p: number) => {
     const novo = new URLSearchParams(params);
@@ -145,7 +146,7 @@ export default function Documento() {
               <Tooltip title="Aumentar texto"><IconButton size="small" onClick={() => setZoom((z) => Math.min(160, z + 10))} aria-label="Aumentar zoom"><ZoomIn size={18} /></IconButton></Tooltip>
             </>
           )}
-          {pdf && modo === "original" && (
+          {d.tipo_arquivo === "pdf" && modo === "original" && (
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               <IconButton size="small" onClick={() => irPara(pagina - 1)} disabled={pagina <= 1} aria-label="Página anterior"><ChevronLeft size={18} /></IconButton>
               <Typography variant="body2">Página {pagina} de {totalPaginas}</Typography>
@@ -278,6 +279,12 @@ export default function Documento() {
           <Valor mono>
             <Box component="span" sx={{ fontFamily: fonteMono, fontSize: 12 }}>{d.hash_sha256.slice(0, 16)}…</Box>
           </Valor>
+          {d.paginas_ocr > 0 && (
+            <Alert severity="info" variant="outlined" sx={{ mt: 2 }}>
+              Texto de {d.paginas_ocr} página{d.paginas_ocr > 1 ? "s" : ""} obtido por OCR (documento digitalizado). A leitura
+              automática pode conter erros: confira no original.
+            </Alert>
+          )}
           {!d.indexacao_semantica && d.status === "disponivel" && (
             <Alert severity="warning" variant="outlined" sx={{ mt: 2 }}>Disponível apenas para busca textual até a indexação semântica ser concluída.</Alert>
           )}
