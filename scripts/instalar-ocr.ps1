@@ -28,8 +28,13 @@ try {
     New-Item -ItemType Directory -Force -Path $tessdata | Out-Null
     foreach ($idioma in @("por")) {
         $destino = Join-Path $tessdata "$idioma.traineddata"
-        if (-not (Test-Path $destino)) {
-            Invoke-WebRequest -UseBasicParsing "https://github.com/tesseract-ocr/tessdata/raw/main/$idioma.traineddata" -OutFile $destino
+        # Baixa para um arquivo temporario e so renomeia ao terminar: um download
+        # interrompido nunca deixa um arquivo de idioma incompleto no lugar.
+        $minimo = 10MB
+        if (-not (Test-Path $destino) -or (Get-Item $destino).Length -lt $minimo) {
+            $parcial = "$destino.part"
+            Invoke-WebRequest -UseBasicParsing "https://github.com/tesseract-ocr/tessdata/raw/main/$idioma.traineddata" -OutFile $parcial
+            Move-Item -Force $parcial $destino
         }
     }
 
