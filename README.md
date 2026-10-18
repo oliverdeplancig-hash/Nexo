@@ -14,6 +14,8 @@ fazer e descobrem qual setor pode ajudar — sempre dentro do que o seu perfil p
   3. **IA local (Ollama)** com citações `[n]` verificadas — e, se a IA cair, os trechos relevantes.
 - **Avaliação das respostas e lacunas do assistente**: o servidor marca se a resposta ajudou; quem gere as regras
   vê perguntas sem resposta ou mal avaliadas e cria regras a partir delas.
+- **Coleções** pessoais e institucionais: criar, editar, excluir e organizar documentos, sem mexer em permissões.
+- **Ajuda** adaptada ao perfil, com botão "?" que abre o tópico da tela atual.
 - **Diretório de setores**: "Qual setor pode me ajudar?".
 - **Importação** de PDF, DOCX, TXT, MD e HTML com extração, metadados sugeridos e indexação.
 - **Login institucional** pela conta Microsoft (`@pm.ba.gov.br`), com contas locais para demonstração —
@@ -74,7 +76,7 @@ Senha dos usuários de demonstração: `Nexo@demo2026` (somente com `NEXO_DEBUG=
 ## Qualidade
 
 ```bash
-cd backend && python -m pytest && ruff check .     # 102 testes
+cd backend && python -m pytest && ruff check .     # 106 testes
 cd frontend && npm run build                       # checagem de tipos + build PWA
 ```
 

@@ -22,6 +22,7 @@ import {
   Clock,
   FileUp,
   FolderTree,
+  HelpCircle,
   History,
   Library,
   LogOut,
@@ -101,6 +102,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       itens: [
         { rotulo: "Setores e contatos", para: "/setores", icone: <Users size={18} /> },
         { rotulo: "Notificações", para: "/notificacoes", icone: <Bell size={18} />, contador: contagem?.nao_lidas },
+        { rotulo: "Ajuda", para: "/ajuda", icone: <HelpCircle size={18} /> },
       ],
     },
     {
@@ -246,6 +248,13 @@ export default function Layout({ children }: { children: ReactNode }) {
           </Box>
         )}
         {!compacta && (
+          <Tooltip title="Ajuda sobre esta tela">
+            <IconButton component={NavLink} to={`/ajuda?de=${encodeURIComponent(local.pathname)}`} aria-label="Ajuda sobre esta tela" sx={{ color: cores.barraLateralMudo }}>
+              <HelpCircle size={18} />
+            </IconButton>
+          </Tooltip>
+        )}
+        {!compacta && (
           <Tooltip title="Sair">
             <IconButton onClick={sair} aria-label="Sair" sx={{ color: cores.barraLateralMudo }}>
               <LogOut size={18} />
@@ -290,6 +299,9 @@ export default function Layout({ children }: { children: ReactNode }) {
             </IconButton>
             <MarcaInstitucional tamanho={28} claro />
             <Typography sx={{ fontWeight: 700, flex: 1 }}>Nexo</Typography>
+            <IconButton component={NavLink} to={`/ajuda?de=${encodeURIComponent(local.pathname)}`} aria-label="Ajuda sobre esta tela">
+              <HelpCircle size={20} />
+            </IconButton>
             <IconButton component={NavLink} to="/notificacoes" aria-label="Notificações">
               <Badge color="primary" badgeContent={contagem?.nao_lidas ?? 0}>
                 <Bell size={20} />

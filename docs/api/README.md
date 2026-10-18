@@ -67,3 +67,12 @@ Servidor → `notificacao`, `processamento` (progresso da ingestão do próprio 
 | Método | Caminho | Descrição |
 |---|---|---|
 | GET | `manutencao/copias/` | Situação das cópias de segurança (exige `admin_permissoes`). Criar e restaurar: comando `copia_seguranca` |
+
+## Coleções
+| Método | Caminho | Descrição |
+|---|---|---|
+| GET · POST | `colecoes/` | Lista (pessoais da pessoa + institucionais) e cria `{nome, descricao, pessoal, superior?}`. Institucional exige `gerir_colecoes` |
+| GET · PATCH · DELETE | `colecoes/{id}/` | Detalhe, edição (`pessoal` não muda) e exclusão (os documentos continuam no repositório). Pessoal: só quem criou; institucional: `gerir_colecoes` |
+| POST | `colecoes/{id}/documentos/` | `{documentos: [ids]}` inclui só os que a pessoa pode consultar → `{adicionados, ignorados}` |
+| DELETE | `colecoes/{id}/documentos/{documento_id}/` | Tira o documento da coleção |
+| GET | `documentos/?colecao={id}` | Documentos da coleção visíveis para a pessoa |

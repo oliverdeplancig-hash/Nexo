@@ -21,6 +21,7 @@ const Notificacoes = lazy(() => import("./paginas/Notificacoes"));
 const Perfil = lazy(() => import("./paginas/Perfil"));
 const Historico = lazy(() => import("./paginas/Historico"));
 const Colecoes = lazy(() => import("./paginas/Colecoes"));
+const Ajuda = lazy(() => import("./paginas/Ajuda"));
 
 function Carregando() {
   return (
@@ -60,6 +61,7 @@ export default function App() {
             <Route path="/assistente/:conversaId?" element={<Chat />} />
             <Route path="/repositorio" element={<Repositorio />} />
             <Route path="/colecoes" element={<Colecoes />} />
+            <Route path="/ajuda" element={<Ajuda />} />
             <Route path="/documentos/:id" element={<Documento />} />
             <Route path="/busca" element={<Busca />} />
             <Route path="/setores" element={<Setores />} />

@@ -38,11 +38,13 @@ import {
   Star,
   ZoomIn,
   ZoomOut,
+  FolderInput,
 } from "lucide-react";
 
 import { api } from "../api/cliente";
 import type { DocumentoDetalhe, Paginado, SetorResumo, Trecho } from "../api/tipos";
 import { ChipClassificacao, Erro, IconeArquivo, Rotulo, Valor } from "../componentes/comuns";
+import { AdicionarAColecao } from "../componentes/DialogosColecao";
 import { cores, fonteMono } from "../tema";
 import { data, dataHora, rotuloAcao, tamanho } from "../util/formatos";
 
@@ -56,6 +58,7 @@ export default function Documento() {
   const [busca, setBusca] = useState("");
   const [aviso, setAviso] = useState<string | null>(null);
   const [compartilhar, setCompartilhar] = useState(false);
+  const [adicionarColecao, setAdicionarColecao] = useState(false);
   const buscaRef = useRef<HTMLInputElement>(null);
   const versaoRef = useRef<HTMLInputElement>(null);
   const pagina = Number(params.get("pagina") ?? "1");
@@ -70,6 +73,15 @@ export default function Documento() {
   const favorito = useMutation({
     mutationFn: (valor: boolean) => api(`/documentos/${id}/favorito/`, { method: valor ? "POST" : "DELETE" }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["documento", id] }),
+  });
+  const removerDaColecao = useMutation({
+    mutationFn: (colecaoId: number) => api(`/colecoes/${colecaoId}/documentos/${id}/`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documento", id] });
+      queryClient.invalidateQueries({ queryKey: ["colecoes"] });
+      setAviso("Documento removido da coleção.");
+    },
+    onError: (e: Error) => setAviso(e.message),
   });
 
   const novaVersao = useMutation({
@@ -220,6 +232,9 @@ export default function Documento() {
                 <Star size={18} fill={d.favorito ? "#F59E0B" : "none"} color={d.favorito ? "#F59E0B" : "currentColor"} />
               </IconButton>
             </Tooltip>
+            <Tooltip title="Adicionar à coleção">
+              <IconButton onClick={() => setAdicionarColecao(true)} aria-label="Adicionar à coleção"><FolderInput size={18} /></IconButton>
+            </Tooltip>
             <Tooltip title="Copiar referência">
               <IconButton onClick={copiarReferencia} aria-label="Copiar referência"><ClipboardCopy size={18} /></IconButton>
             </Tooltip>
@@ -273,6 +288,24 @@ export default function Documento() {
               </Box>
             </>
           )}
+          {d.colecoes.length > 0 && (
+            <>
+              <Rotulo>Coleções</Rotulo>
+              <Box component="dd" sx={{ m: 0, mt: 0.5, display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                {d.colecoes.map((c) => (
+                  <Chip
+                    key={c.id}
+                    label={c.nome}
+                    size="small"
+                    variant="outlined"
+                    onClick={() => navegar(`/repositorio?colecao=${c.id}`)}
+                    onDelete={c.pode_editar ? () => removerDaColecao.mutate(c.id) : undefined}
+                    aria-label={`Coleção ${c.nome}`}
+                  />
+                ))}
+              </Box>
+            </>
+          )}
           <Rotulo>Suas permissões</Rotulo>
           <Valor>{d.acoes_permitidas.map((a) => rotuloAcao[a]).join(", ")}</Valor>
           <Rotulo>Integridade (SHA-256)</Rotulo>
@@ -292,6 +325,9 @@ export default function Documento() {
       </Box>
 
       <DialogoCompartilhar aberto={compartilhar} aoFechar={() => setCompartilhar(false)} documentoId={d.id} acoes={d.acoes_permitidas} aoConcluir={(m) => setAviso(m)} />
+      {adicionarColecao && (
+        <AdicionarAColecao documentos={[d.id]} aoFechar={() => setAdicionarColecao(false)} aoConcluir={(m) => setAviso(m)} />
+      )}
       <Snackbar open={!!aviso} autoHideDuration={4000} onClose={() => setAviso(null)} message={aviso} />
     </Box>
   );

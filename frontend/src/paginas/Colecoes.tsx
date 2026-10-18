@@ -1,64 +1,101 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Paper, Switch, TextField, Typography } from "@mui/material";
-import { Folder, FolderLock, Plus } from "lucide-react";
+import { Link as RouterLink } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { Box, Button, IconButton, Paper, Skeleton, Tooltip, Typography } from "@mui/material";
+import { Folder, FolderLock, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { api } from "../api/cliente";
 import type { Colecao, Paginado } from "../api/tipos";
-import { Cabecalho, EstadoVazio, Erro, Pagina } from "../componentes/comuns";
-import { useAutenticacao } from "../contexto/Autenticacao";
+import { Cabecalho, EstadoVazio, Erro, Pagina, TituloSecao } from "../componentes/comuns";
+import { EditorColecao, ExcluirColecao } from "../componentes/DialogosColecao";
 import { cores } from "../tema";
+import { dataHora } from "../util/formatos";
 
 export default function Colecoes() {
-  const { tem } = useAutenticacao();
-  const navegar = useNavigate();
-  const queryClient = useQueryClient();
-  const [nova, setNova] = useState<{ nome: string; descricao: string; pessoal: boolean } | null>(null);
+  const [editando, setEditando] = useState<Colecao | "nova" | null>(null);
+  const [excluindo, setExcluindo] = useState<Colecao | null>(null);
   const colecoes = useQuery({ queryKey: ["colecoes"], queryFn: () => api<Paginado<Colecao>>("/colecoes/?tamanho=100") });
-  const criar = useMutation({
-    mutationFn: () => api("/colecoes/", { method: "POST", json: nova }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["colecoes"] });
-      setNova(null);
-    },
-  });
+  const todas = colecoes.data?.results ?? [];
+  const pessoais = todas.filter((c) => c.pessoal);
+  const institucionais = todas.filter((c) => !c.pessoal);
+
+  const grade = (lista: Colecao[]) => (
+    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", lg: "repeat(3, 1fr)" }, gap: 1.5 }}>
+      {lista.map((c) => (
+        <Paper key={c.id} variant="outlined" sx={{ display: "flex", alignItems: "flex-start", "&:hover": { borderColor: cores.primariaBorda } }}>
+          <Box
+            component={RouterLink}
+            to={`/repositorio?colecao=${c.id}`}
+            sx={{ flex: 1, minWidth: 0, p: 2, display: "flex", gap: 1.5, color: "inherit", textDecoration: "none", borderRadius: 1 }}
+          >
+            {c.pessoal ? <FolderLock size={22} color={cores.textoSecundario} /> : <Folder size={22} color={cores.primaria} />}
+            <Box sx={{ minWidth: 0 }}>
+              <Typography sx={{ fontWeight: 600, fontSize: 15, overflowWrap: "anywhere" }}>{c.nome}</Typography>
+              {c.descricao && <Typography variant="body2" sx={{ color: cores.textoSecundario, overflowWrap: "anywhere" }}>{c.descricao}</Typography>}
+              <Typography variant="caption" component="p">
+                {c.total_documentos ?? 0} documento(s) visíveis para você
+              </Typography>
+              <Typography variant="caption" component="p">
+                Atualizada em {dataHora(c.atualizado_em)}
+                {!c.pessoal && c.criada_por_nome ? `, criada por ${c.criada_por_nome}` : ""}
+              </Typography>
+            </Box>
+          </Box>
+          {c.pode_editar && (
+            <Box sx={{ display: "flex", flexDirection: "column", p: 0.5 }}>
+              <Tooltip title="Editar">
+                <IconButton size="small" onClick={() => setEditando(c)} aria-label={`Editar ${c.nome}`}>
+                  <Pencil size={16} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Excluir">
+                <IconButton size="small" onClick={() => setExcluindo(c)} aria-label={`Excluir ${c.nome}`}>
+                  <Trash2 size={16} />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
+        </Paper>
+      ))}
+    </Box>
+  );
+
   return (
     <Pagina>
       <Cabecalho
         titulo="Pastas e coleções"
         descricao="Agrupamentos de documentos. Uma coleção não altera as permissões: cada servidor vê apenas os documentos autorizados para ele."
-        acoes={<Button variant="contained" startIcon={<Plus size={16} />} onClick={() => setNova({ nome: "", descricao: "", pessoal: !tem("gerir_colecoes") })}>Nova coleção</Button>}
+        acoes={<Button variant="contained" startIcon={<Plus size={16} />} onClick={() => setEditando("nova")}>Nova coleção</Button>}
       />
       {colecoes.isError && <Erro erro={colecoes.error} />}
-      {colecoes.data?.results.length === 0 && <Paper variant="outlined"><EstadoVazio icone={<Folder size={28} />} titulo="Nenhuma coleção ainda" texto="Crie uma coleção para reunir documentos de um mesmo tema." /></Paper>}
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", lg: "repeat(3, 1fr)" }, gap: 1.5 }}>
-        {colecoes.data?.results.map((c) => (
-          <Paper key={c.id} variant="outlined" component="button" onClick={() => navegar(`/repositorio?colecao=${c.id}`)} sx={{ p: 2, textAlign: "left", cursor: "pointer", font: "inherit", display: "flex", gap: 1.5, "&:hover": { borderColor: cores.primariaBorda } }}>
-            {c.pessoal ? <FolderLock size={22} color={cores.textoSecundario} /> : <Folder size={22} color={cores.primaria} />}
-            <Box>
-              <Typography sx={{ fontWeight: 600, fontSize: 15 }}>{c.nome}</Typography>
-              {c.descricao && <Typography variant="body2" sx={{ color: cores.textoSecundario }}>{c.descricao}</Typography>}
-              <Typography variant="caption">{c.total_documentos ?? 0} documento(s) visíveis para você{c.pessoal ? ", pessoal" : ""}</Typography>
-            </Box>
-          </Paper>
-        ))}
-      </Box>
-      {nova && (
-        <Dialog open onClose={() => setNova(null)} fullWidth maxWidth="xs">
-          <DialogTitle>Nova coleção</DialogTitle>
-          <DialogContent sx={{ display: "grid", gap: 2, pt: "8px !important" }}>
-            {criar.isError && <Alert severity="error">{(criar.error as Error).message}</Alert>}
-            <TextField label="Nome" value={nova.nome} onChange={(e) => setNova({ ...nova, nome: e.target.value })} autoFocus />
-            <TextField label="Descrição" value={nova.descricao} onChange={(e) => setNova({ ...nova, descricao: e.target.value })} multiline minRows={2} />
-            <FormControlLabel control={<Switch checked={nova.pessoal} disabled={!tem("gerir_colecoes")} onChange={(e) => setNova({ ...nova, pessoal: e.target.checked })} />} label="Coleção pessoal (só você vê)" />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setNova(null)}>Cancelar</Button>
-            <Button variant="contained" onClick={() => criar.mutate()} disabled={!nova.nome.trim()}>Criar coleção</Button>
-          </DialogActions>
-        </Dialog>
+      {colecoes.isLoading && <Skeleton variant="rounded" height={160} />}
+      {colecoes.isSuccess && todas.length === 0 && (
+        <Paper variant="outlined">
+          <EstadoVazio
+            icone={<Folder size={28} />}
+            titulo="Nenhuma coleção ainda"
+            texto="Crie uma coleção e, no repositório, selecione documentos e use “Adicionar à coleção”."
+          />
+        </Paper>
       )}
+      {pessoais.length > 0 && (
+        <Box component="section" sx={{ mb: 3 }}>
+          <TituloSecao>Minhas coleções pessoais</TituloSecao>
+          {grade(pessoais)}
+        </Box>
+      )}
+      {institucionais.length > 0 && (
+        <Box component="section">
+          <TituloSecao>Coleções institucionais</TituloSecao>
+          {grade(institucionais)}
+        </Box>
+      )}
+      <Typography variant="caption" component="p" sx={{ mt: 2 }}>
+        Para colocar documentos numa coleção, selecione-os no repositório (ou abra um documento) e use “Adicionar à coleção”.
+      </Typography>
+
+      {editando && <EditorColecao colecao={editando === "nova" ? undefined : editando} aoFechar={() => setEditando(null)} />}
+      {excluindo && <ExcluirColecao colecao={excluindo} aoFechar={() => setExcluindo(null)} />}
     </Pagina>
   );
 }

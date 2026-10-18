@@ -33,3 +33,10 @@ Implicações: administrar ⇒ todas; editar/baixar/compartilhar ⇒ visualizar 
   (`decidir`, ADR-005).
 - Apagar a conversa apaga a pergunta, a avaliação e a lacuna. Tratar ou reabrir lacuna gera evento
   `LACUNA_TRATADA` na auditoria.
+
+## Coleções
+- Coleção agrupa documentos e **não concede acesso**: quem abre a coleção vê só os documentos autorizados
+  para si (`documentos_visiveis`). Só entram numa coleção documentos que quem organiza pode consultar.
+- Coleção pessoal: visível, editável e excluível só por quem criou; não aparece (nem pelo nome) para outras
+  pessoas, inclusive na tela do documento e no filtro `?colecao=`. Coleção institucional: todos veem;
+  alterar exige `gerir_colecoes`. Regras em `apps/documentos/colecoes.py`.

@@ -12,10 +12,10 @@ from rest_framework.response import Response
 from apps.acesso.models import Acao, AutorizacaoDocumento
 from apps.acesso.servico import decidir, documentos_visiveis
 from apps.auditoria.servico import registrar
-from apps.comum.permissoes import exige_funcao
 from apps.contas.models import Funcao
 
-from .models import AcessoRecente, Categoria, Colecao, Favorito
+from . import colecoes as colecoes_regras
+from .models import AcessoRecente, Categoria, Favorito
 from .serializers import (
     CategoriaSerializer,
     ColecaoSerializer,
@@ -83,7 +83,13 @@ class DocumentoViewSet(
         if p.get("categoria"):
             qs = qs.filter(categoria_id__in=p["categoria"].split(","))
         if p.get("colecao"):
-            qs = qs.filter(colecoes__id=p["colecao"])
+            # Coleção pessoal de outra pessoa não filtra nada (não revela o que há nela).
+            colecao = (
+                colecoes_regras.visiveis(self.request.user).filter(pk=p["colecao"]).first()
+                if str(p["colecao"]).isdigit()
+                else None
+            )
+            qs = qs.filter(colecoes=colecao) if colecao else qs.none()
         if p.get("status"):
             qs = qs.filter(status=p["status"])
         if p.get("de") and parse_date(p["de"]):
@@ -235,27 +241,64 @@ class DocumentoViewSet(
 
 
 class ColecaoViewSet(viewsets.ModelViewSet):
+    """Pastas e coleções. Regras em apps/documentos/colecoes.py."""
+
     serializer_class = ColecaoSerializer
 
     def get_queryset(self):
         usuario = self.request.user
         visiveis = documentos_visiveis(usuario).values("id")
         return (
-            Colecao.objects.filter(Q(pessoal=False) | Q(criada_por=usuario))
+            colecoes_regras.visiveis(usuario)
+            .select_related("criada_por")
             .annotate(total_documentos=Count("documentos", filter=Q(documentos__id__in=visiveis), distinct=True))
             .order_by("nome")
         )
 
-    def get_permissions(self):
-        if self.action in ("update", "partial_update", "destroy"):
-            return [exige_funcao(Funcao.GERIR_COLECOES)()]
-        return super().get_permissions()
+    def _exigir_gestao(self, colecao):
+        if not colecoes_regras.pode_gerir(self.request.user, colecao):
+            if colecao.pessoal:
+                raise PermissionDenied("Só quem criou pode alterar esta coleção pessoal.")
+            raise PermissionDenied("Seu perfil não pode alterar coleções institucionais.")
 
     def perform_create(self, serializer):
         pessoal = serializer.validated_data.get("pessoal", False)
         if not pessoal and not self.request.user.tem_funcao(Funcao.GERIR_COLECOES):
             raise PermissionDenied("Você pode criar apenas coleções pessoais.")
         serializer.save(criada_por=self.request.user)
+
+    def perform_update(self, serializer):
+        self._exigir_gestao(serializer.instance)
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        # Os documentos não são apagados: só deixam de fazer parte da coleção (e das subcoleções).
+        self._exigir_gestao(instance)
+        instance.delete()
+
+    @action(detail=True, methods=["post"], url_path="documentos")
+    def adicionar_documentos(self, request, pk=None):
+        """{"documentos": [ids]} — inclui só documentos que a pessoa pode consultar."""
+        colecao = self.get_object()
+        self._exigir_gestao(colecao)
+        ids = request.data.get("documentos") or []
+        if not isinstance(ids, list) or not all(isinstance(i, int) for i in ids):
+            return Response({"detail": "Informe a lista de documentos."}, status=status.HTTP_400_BAD_REQUEST)
+        permitidos = list(documentos_visiveis(request.user).filter(id__in=ids).values_list("id", flat=True))
+        colecao.documentos.add(*permitidos)
+        colecao.save(update_fields=["atualizado_em"])
+        return Response({"adicionados": len(permitidos), "ignorados": len(set(ids)) - len(permitidos)})
+
+    @action(detail=True, methods=["delete"], url_path=r"documentos/(?P<documento_id>\d+)")
+    def remover_documento(self, request, pk=None, documento_id=None):
+        colecao = self.get_object()
+        self._exigir_gestao(colecao)
+        documento = documentos_visiveis(request.user).filter(id=documento_id).first()
+        if documento is None:
+            raise Http404
+        colecao.documentos.remove(documento)
+        colecao.save(update_fields=["atualizado_em"])
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CategoriaViewSet(viewsets.ReadOnlyModelViewSet):

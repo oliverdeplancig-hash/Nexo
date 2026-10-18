@@ -68,6 +68,8 @@ export interface Colecao {
   setor: number | null;
   pessoal: boolean;
   total_documentos: number | null;
+  pode_editar: boolean;
+  criada_por_nome: string;
   atualizado_em: string;
 }
 

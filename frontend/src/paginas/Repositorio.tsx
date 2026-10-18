@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link as RouterLink, useNavigate, useSearchParams } from "react-router-dom";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Alert,
   Box,
   Button,
   Checkbox,
@@ -27,11 +28,12 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { Download, Eye, FileUp, FolderPlus, LayoutGrid, Rows3, Search, Star } from "lucide-react";
+import { Download, Eye, FileUp, Folder, FolderInput, FolderMinus, FolderPlus, LayoutGrid, Pencil, Rows3, Search, Star, Trash2, X } from "lucide-react";
 
 import { api, parametros } from "../api/cliente";
-import type { DocumentoLista, Paginado, Setor } from "../api/tipos";
+import type { Colecao, DocumentoLista, Paginado, Setor } from "../api/tipos";
 import { Cabecalho, ChipClassificacao, EstadoVazio, Erro, IconeArquivo, Pagina } from "../componentes/comuns";
+import { AdicionarAColecao, EditorColecao, ExcluirColecao } from "../componentes/DialogosColecao";
 import { useAutenticacao } from "../contexto/Autenticacao";
 import { cores } from "../tema";
 import { data } from "../util/formatos";
@@ -53,11 +55,31 @@ export default function Repositorio() {
   const [visao, setVisao] = useState<"tabela" | "grade">("tabela");
   const [selecionados, setSelecionados] = useState<number[]>([]);
   const [termo, setTermo] = useState(params.get("q") ?? "");
+  const [dialogo, setDialogo] = useState<"adicionar" | "editar" | "excluir" | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
 
   const aba = params.get("aba") ?? "todos";
   const pagina = Number(params.get("pagina") ?? "1");
   const ordem = params.get("ordem") ?? "-atualizacao";
-  const filtros = { aba, q: params.get("q"), tipo: params.get("tipo"), setor: params.get("setor"), de: params.get("de"), ate: params.get("ate"), ordem, page: pagina };
+  const colecaoId = params.get("colecao");
+  const filtros = { aba, q: params.get("q"), tipo: params.get("tipo"), setor: params.get("setor"), de: params.get("de"), ate: params.get("ate"), colecao: colecaoId, ordem, page: pagina };
+  const colecao = useQuery({
+    queryKey: ["colecoes", colecaoId],
+    queryFn: () => api<Colecao>(`/colecoes/${colecaoId}/`),
+    enabled: !!colecaoId,
+  });
+  const removerDaColecao = useMutation({
+    mutationFn: async (ids: number[]) => {
+      for (const id of ids) await api(`/colecoes/${colecaoId}/documentos/${id}/`, { method: "DELETE" });
+      return ids.length;
+    },
+    onSuccess: (n) => {
+      queryClient.invalidateQueries({ queryKey: ["documentos"] });
+      queryClient.invalidateQueries({ queryKey: ["colecoes"] });
+      setSelecionados([]);
+      setAviso(`${n} documento(s) removido(s) da coleção. Eles continuam no repositório.`);
+    },
+  });
 
   const setores = useQuery({ queryKey: ["setores", "todos"], queryFn: () => api<Paginado<Setor>>("/setores/?tamanho=100") });
   const consulta = useQuery({
@@ -124,6 +146,31 @@ export default function Repositorio() {
         ))}
       </Tabs>
 
+      {colecaoId && (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", p: 1.5, mb: 2, borderRadius: 2, border: `1px solid ${cores.borda}`, bgcolor: cores.superficie }}>
+          <Folder size={20} color={cores.primaria} />
+          <Box sx={{ flex: "1 1 200px", minWidth: 0 }}>
+            <Typography sx={{ fontWeight: 600, overflowWrap: "anywhere" }}>
+              {colecao.data ? `Coleção: ${colecao.data.nome}` : colecao.isError ? "Coleção não encontrada" : "Coleção"}
+            </Typography>
+            {colecao.data && (
+              <Typography variant="caption">
+                {colecao.data.pessoal ? "Pessoal (só você vê)" : "Institucional"}
+                {colecao.data.descricao ? `. ${colecao.data.descricao}` : ""}
+              </Typography>
+            )}
+          </Box>
+          {colecao.data?.pode_editar && (
+            <>
+              <Button size="small" startIcon={<Pencil size={14} />} onClick={() => setDialogo("editar")}>Editar</Button>
+              <Button size="small" startIcon={<Trash2 size={14} />} onClick={() => setDialogo("excluir")}>Excluir</Button>
+            </>
+          )}
+          <Button size="small" startIcon={<X size={14} />} onClick={() => mudar("colecao", null)}>Ver todos os documentos</Button>
+        </Box>
+      )}
+      {aviso && <Alert severity="success" onClose={() => setAviso(null)} sx={{ mb: 2 }}>{aviso}</Alert>}
+
       <Box sx={{ display: "flex", gap: 1.25, flexWrap: "wrap", alignItems: "center", mb: 2 }}>
         <Box component="form" onSubmit={(e) => { e.preventDefault(); mudar("q", termo.trim() || null); }} sx={{ flex: "1 1 280px" }}>
           <TextField
@@ -161,13 +208,21 @@ export default function Repositorio() {
       </Box>
 
       {selecionados.length > 0 && (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 1, mb: 1.5, borderRadius: 2, bgcolor: cores.primariaFundo, border: `1px solid ${cores.primariaBorda}` }}>
+        <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1, p: 1, mb: 1.5, borderRadius: 2, bgcolor: cores.primariaFundo, border: `1px solid ${cores.primariaBorda}` }}>
           <Typography variant="body2" sx={{ fontWeight: 600, px: 1 }}>
             {selecionados.length} selecionado{selecionados.length > 1 ? "s" : ""}
           </Typography>
           <Button size="small" startIcon={<Star size={14} />} onClick={() => { selecionados.forEach((id) => favoritar.mutate({ id, valor: true })); setSelecionados([]); }}>
             Adicionar aos favoritos
           </Button>
+          <Button size="small" startIcon={<FolderInput size={14} />} onClick={() => setDialogo("adicionar")}>
+            Adicionar à coleção
+          </Button>
+          {colecao.data?.pode_editar && (
+            <Button size="small" startIcon={<FolderMinus size={14} />} disabled={removerDaColecao.isPending} onClick={() => removerDaColecao.mutate(selecionados)}>
+              Remover da coleção
+            </Button>
+          )}
           <Button size="small" onClick={() => setSelecionados([])}>Limpar seleção</Button>
         </Box>
       )}
@@ -180,8 +235,14 @@ export default function Repositorio() {
         <Paper variant="outlined">
           <EstadoVazio
             icone={<Search size={32} />}
-            titulo={params.get("q") ? "Nenhum documento com esse nome" : "Nenhum documento nesta lista"}
-            texto={params.get("q") ? "Tente outro termo ou pesquise no conteúdo dos documentos." : "Os documentos autorizados para o seu perfil aparecerão aqui."}
+            titulo={params.get("q") ? "Nenhum documento com esse nome" : colecaoId ? "Nenhum documento nesta coleção" : "Nenhum documento nesta lista"}
+            texto={
+              params.get("q")
+                ? "Tente outro termo ou pesquise no conteúdo dos documentos."
+                : colecaoId
+                  ? "Volte a todos os documentos, selecione os que quer reunir aqui e use “Adicionar à coleção”."
+                  : "Os documentos autorizados para o seu perfil aparecerão aqui."
+            }
             acao={params.get("q") ? <Button onClick={() => navegar(`/busca?q=${encodeURIComponent(params.get("q") ?? "")}`)}>Pesquisar no conteúdo</Button> : undefined}
           />
         </Paper>
@@ -274,6 +335,20 @@ export default function Repositorio() {
           onPageChange={(_, p) => mudar("pagina", String(p + 1))}
           labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count}`}
         />
+      )}
+      {dialogo === "adicionar" && (
+        <AdicionarAColecao
+          documentos={selecionados}
+          aoFechar={() => setDialogo(null)}
+          aoConcluir={(texto) => {
+            setAviso(texto);
+            setSelecionados([]);
+          }}
+        />
+      )}
+      {dialogo === "editar" && colecao.data && <EditorColecao colecao={colecao.data} aoFechar={() => setDialogo(null)} />}
+      {dialogo === "excluir" && colecao.data && (
+        <ExcluirColecao colecao={colecao.data} aoFechar={() => setDialogo(null)} aoExcluir={() => navegar("/colecoes")} />
       )}
     </Pagina>
   );

@@ -80,7 +80,9 @@ def _criar_documento(request, arquivo, metadados: dict, versao_anterior: Documen
         documento.arquivo.save(arquivo.name, arquivo, save=False)
         documento.save()
         if metadados["colecoes"]:
-            documento.colecoes.set(metadados["colecoes"])
+            from apps.documentos.colecoes import gerenciaveis
+
+            documento.colecoes.set(gerenciaveis(request.user, metadados["colecoes"]))
         acoes = [Acao.BAIXAR] if metadados["autorizados_baixam"] else [Acao.VISUALIZAR]
         for setor_id in metadados["setores_autorizados"]:
             AutorizacaoDocumento.objects.create(
