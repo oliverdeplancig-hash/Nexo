@@ -91,8 +91,23 @@ def _executar(cmd: list[str], descricao: str) -> str:
         cmd, env=ambiente_pg(), capture_output=True, text=True, encoding="utf-8", errors="replace"
     )
     if resultado.returncode != 0:
-        raise ErroCopia(f"{descricao} falhou: {resultado.stderr.strip()[-1500:]}")
+        raise ErroCopia(
+            f"{descricao} falhou: {_detalhe_falha(cmd[0], resultado.returncode, resultado.stderr, resultado.stdout)}"
+        )
     return resultado.stdout
+
+
+def _detalhe_falha(programa: str, codigo: int, stderr: str, stdout: str = "") -> str:
+    """Mensagem do programa ou, se ele não disse nada (ex.: não chegou a abrir no Windows), o código de saída."""
+    texto = (stderr or "").strip() or (stdout or "").strip()
+    if texto:
+        return texto[-1500:]
+    dica = ""
+    if codigo & 0xFFFFFFFF == 0xC0000135:
+        dica = " — uma DLL necessária não foi encontrada"
+    elif codigo & 0xFFFFFFFF == 0xC0000005:
+        dica = " — o programa encerrou com erro de acesso à memória"
+    return f"o programa não informou o motivo (código de saída {codigo}, 0x{codigo & 0xFFFFFFFF:08X}{dica}; programa: {programa})"
 
 
 def _consultar(sql: str, parametros=None) -> list[tuple]:
@@ -193,9 +208,7 @@ def criar(
     try:
         with tempfile.TemporaryDirectory(dir=destino, prefix=".copia-") as tmp:
             dump = Path(tmp) / "banco.dump"
-            _executar(
-                [binario("pg_dump"), "-Fc", "-Z", "6", "--no-owner", "--no-privileges", "-f", str(dump)], "pg_dump"
-            )
+            _executar([binario("pg_dump"), "-Fc", "--no-owner", "--no-privileges", "-f", str(dump)], "pg_dump")
             manifesto = {
                 "formato": FORMATO,
                 "criada_em": timezone.localtime().isoformat(),
@@ -505,9 +518,10 @@ def _restaurar_banco(dump: Path, extensoes: list[str], tmp: Path):
         env=ambiente_pg(),
     )
     if carga.returncode != 0:
-        raise ErroCopia(
-            f"A carga do banco falhou e foi desfeita: {carga.stderr.decode('utf-8', 'replace').strip()[-1500:]}"
+        detalhe = _detalhe_falha(
+            "psql", carga.returncode, carga.stderr.decode("utf-8", "replace"), carga.stdout.decode("utf-8", "replace")
         )
+        raise ErroCopia(f"A carga do banco falhou e foi desfeita: {detalhe}")
 
 
 def _trocar_arquivos(novos: Path, manter_antigos: bool) -> Path | None:
