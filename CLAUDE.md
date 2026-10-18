@@ -65,6 +65,14 @@ Antes de propor uma mudança arquitetural, verificar se existe
 uma ADR relacionada ao assunto. Formato `ADR-NNN`, status inicial **Proposta**,
 índice em `docs/adr/README.md`.
 
+**ADR automática (regra do usuário):** toda funcionalidade nova ou mudança de comportamento que
+envolva uma decisão ainda não registrada — modelo de dados, regra de acesso ou privacidade,
+integração externa, dependência nova, formato de arquivo, operação (cópia, implantação), padrão de
+interface — sai **com a sua ADR no mesmo commit**, sem esperar pedido. Se a mudança altera uma
+decisão existente, criar nova ADR que a substitui (ADR aceita não se edita). Atualizar o índice e
+citar a ADR no módulo principal e na documentação afetada. Correções de defeito e ajustes que não
+mudam decisão não precisam de ADR.
+
 ## 8. Comandos frequentes
 
 ```bash
