@@ -139,6 +139,36 @@ export interface Mensagem {
   interrompida: boolean;
   duracao_ms: number | null;
   criada_em: string;
+  avaliacao: Avaliacao | null;
+}
+
+export interface Avaliacao {
+  util: boolean;
+  motivo: string;
+  comentario: string;
+  atualizada_em?: string;
+}
+
+export interface Lacuna {
+  id: number;
+  pergunta: string;
+  origem: Origem | "";
+  criada_em: string;
+  avaliacao: Avaliacao | null;
+  regra_usada: string | null;
+  regra_proxima: { codigo: string; titulo: string; pontuacao: number } | null;
+  fontes: { documento_id: number; titulo: string }[];
+  tratamento: { tratada_em: string; tratada_por: string; observacao: string; regra: string | null } | null;
+}
+
+export interface ResumoLacunas {
+  dias: number;
+  respostas: number;
+  por_origem: Record<string, number>;
+  avaliadas: number;
+  uteis: number;
+  nao_uteis: number;
+  lacunas_pendentes: number;
 }
 
 export interface Conversa {

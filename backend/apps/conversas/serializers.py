@@ -14,6 +14,7 @@ def _usuario(contexto):
 
 class MensagemSerializer(serializers.ModelSerializer):
     fontes = serializers.SerializerMethodField()
+    avaliacao = serializers.SerializerMethodField()
 
     class Meta:
         model = Mensagem
@@ -32,7 +33,15 @@ class MensagemSerializer(serializers.ModelSerializer):
             "interrompida",
             "duracao_ms",
             "criada_em",
+            "avaliacao",
         ]
+
+    def get_avaliacao(self, obj):
+        if obj.papel != Mensagem.Papel.ASSISTENTE:
+            return None
+        from .lacunas import serializar_avaliacao
+
+        return serializar_avaliacao(obj)
 
     def get_fontes(self, obj):
         """Permissões são reavaliadas a cada leitura: se o acesso a um documento

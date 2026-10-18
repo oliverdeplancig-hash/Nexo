@@ -31,7 +31,11 @@ class ConversaViewSet(
     @action(detail=True, methods=["get"])
     def mensagens(self, request, pk=None):
         conversa = self.get_object()
-        return Response(MensagemSerializer(conversa.mensagens.all(), many=True, context={"request": request}).data)
+        return Response(
+            MensagemSerializer(
+                conversa.mensagens.select_related("avaliacao"), many=True, context={"request": request}
+            ).data
+        )
 
     @action(detail=False, methods=["post"])
     def perguntar(self, request):

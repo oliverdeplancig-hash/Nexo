@@ -61,3 +61,41 @@ class Mensagem(models.Model):
 
     class Meta:
         ordering = ["conversa", "id"]
+
+
+class MotivoAvaliacao(models.TextChoices):
+    INCORRETA = "incorreta", "Informação incorreta"
+    INCOMPLETA = "incompleta", "Incompleta"
+    NAO_RESPONDEU = "nao_respondeu", "Não respondeu à pergunta"
+    DESATUALIZADA = "desatualizada", "Desatualizada"
+    SETOR_ERRADO = "setor_errado", "Setor indicado errado"
+    OUTRO = "outro", "Outro"
+
+
+class AvaliacaoResposta(models.Model):
+    """Avaliação de uma resposta pelo próprio autor da pergunta (útil / não útil)."""
+
+    mensagem = models.OneToOneField(Mensagem, on_delete=models.CASCADE, related_name="avaliacao")
+    util = models.BooleanField()
+    motivo = models.CharField(max_length=20, choices=MotivoAvaliacao.choices, blank=True)
+    comentario = models.CharField(max_length=500, blank=True)
+    criada_em = models.DateTimeField(auto_now_add=True)
+    atualizada_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "avaliação de resposta"
+        verbose_name_plural = "avaliações de respostas"
+
+
+class TratamentoLacuna(models.Model):
+    """Registro de que uma lacuna (pergunta mal respondida) foi analisada pela gestão do motor."""
+
+    mensagem = models.OneToOneField(Mensagem, on_delete=models.CASCADE, related_name="tratamento")
+    tratada_por = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+")
+    tratada_em = models.DateTimeField(auto_now_add=True)
+    observacao = models.CharField(max_length=500, blank=True)
+    regra = models.ForeignKey("motor.Regra", null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+
+    class Meta:
+        verbose_name = "tratamento de lacuna"
+        verbose_name_plural = "tratamentos de lacunas"

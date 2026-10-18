@@ -12,6 +12,8 @@ fazer e descobrem qual setor pode ajudar — sempre dentro do que o seu perfil p
   1. **Motor determinístico** — regras aprovadas respondem sem IA, sempre do mesmo jeito, com fontes;
   2. **Busca híbrida** (texto + significado + nome) apenas nos documentos autorizados;
   3. **IA local (Ollama)** com citações `[n]` verificadas — e, se a IA cair, os trechos relevantes.
+- **Avaliação das respostas e lacunas do assistente**: o servidor marca se a resposta ajudou; quem gere as regras
+  vê perguntas sem resposta ou mal avaliadas e cria regras a partir delas.
 - **Diretório de setores**: "Qual setor pode me ajudar?".
 - **Importação** de PDF, DOCX, TXT, MD e HTML com extração, metadados sugeridos e indexação.
 - **Login institucional** pela conta Microsoft (`@pm.ba.gov.br`), com contas locais para demonstração —
@@ -70,7 +72,7 @@ Senha dos usuários de demonstração: `Nexo@demo2026` (somente com `NEXO_DEBUG=
 ## Qualidade
 
 ```bash
-cd backend && python -m pytest && ruff check .     # 73 testes
+cd backend && python -m pytest && ruff check .     # 84 testes
 cd frontend && npm run build                       # checagem de tipos + build PWA
 ```
 

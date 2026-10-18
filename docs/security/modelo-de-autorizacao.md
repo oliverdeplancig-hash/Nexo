@@ -24,3 +24,12 @@ Implicações: administrar ⇒ todas; editar/baixar/compartilhar ⇒ visualizar 
 - Atribuir perfil com função crítica exige *admin_permissoes*.
 - Fontes de mensagens antigas são reavaliadas a cada leitura.
 - WebSocket: origem validada, sessão exigida, usuário recarregado por mensagem, sem grupos compartilhados.
+
+## Avaliações e lacunas do assistente
+- Só o autor da pergunta avalia a resposta (mensagem de outra pessoa → 404).
+- A lista de lacunas (função `gerir_regras`) mostra a **pergunta**, a origem da resposta, a avaliação e o
+  comentário — **sem o autor** (nem nome, nem setor) e **sem o texto da resposta**, que pode conter trechos de
+  documentos que o gestor não pode ler. Documentos usados como fonte aparecem só se o gestor puder consultá-los
+  (`decidir`, ADR-005).
+- Apagar a conversa apaga a pergunta, a avaliação e a lacuna. Tratar ou reabrir lacuna gera evento
+  `LACUNA_TRATADA` na auditoria.

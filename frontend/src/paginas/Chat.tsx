@@ -32,6 +32,7 @@ import {
 import { api } from "../api/cliente";
 import { SocketNexo, type EstadoConexao } from "../api/socket";
 import type { Conversa, Fonte, Mensagem } from "../api/tipos";
+import AvaliacaoResposta from "../componentes/AvaliacaoResposta";
 import { Markdown, PainelContextual, SeloConfianca } from "../componentes/comuns";
 import { CartaoFonte, CartaoSetor } from "../componentes/Fontes";
 import { useAutenticacao } from "../contexto/Autenticacao";
@@ -200,6 +201,7 @@ export default function Chat() {
           rastro: {},
           interrompida: false,
           duracao_ms: null,
+          avaliacao: null,
           criada_em: new Date().toISOString(),
         },
       ]);
@@ -581,6 +583,9 @@ function MensagemAssistente({
             {copiado ? <Check size={16} /> : <Copy size={16} />}
           </IconButton>
         </Tooltip>
+        {m.id > 0 && m.origem !== "erro" && m.origem !== "desambiguacao" && (
+          <AvaliacaoResposta key={m.id} mensagemId={m.id} inicial={m.avaliacao ?? null} />
+        )}
         {m.fontes.length > 0 && (
           <Button size="small" startIcon={<PanelRight size={16} />} onClick={() => aoAbrirFontes(m.fontes)}>
             Ver todas as fontes

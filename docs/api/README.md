@@ -45,6 +45,11 @@ Paginação: `?page=N&tamanho=M` → `{count, next, previous, results}`.
 | CRUD | `motor/regras/` · POST `{id}/publicar/` · GET `{id}/versoes/` · POST `simular/` | Motor determinístico |
 | GET | `conversas/` · `conversas/{id}/mensagens/` | Histórico |
 | POST | `conversas/perguntar/` | `{texto, conversa_id?, documento_id?}` sem streaming |
+| PUT · DELETE | `mensagens/{id}/avaliacao/` | `{util, motivo?, comentario?}` — só o autor, só respostas do assistente |
+| GET | `avaliacoes/motivos/` | Motivos de "não útil" |
+| GET | `lacunas/?situacao=pendentes\|tratadas\|todas&tipo=todas\|negativas\|sem_resposta&dias=90&q=` | Lacunas do assistente (exige `gerir_regras`); sem autor e sem texto da resposta |
+| GET | `lacunas/resumo/?dias=30` | Indicadores: respostas, por origem, avaliações, lacunas pendentes |
+| POST · DELETE | `lacunas/{id}/tratar/` | `{regra?, observacao?}` marca como tratada; DELETE reabre (auditado) |
 | GET | `auditoria/eventos/` · `tipos/` · `integridade/` | Trilha |
 | GET/POST | `notificacoes/` · `contagem/` · `{id}/ler/` · `ler-todas/` | Notificações |
 | CRUD | `usuarios/`, `perfis/` · GET `funcoes/` | Administração |

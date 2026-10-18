@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
@@ -13,6 +14,8 @@ import {
   IconButton,
   MenuItem,
   Paper,
+  Tab,
+  Tabs,
   Table,
   TableBody,
   TableCell,
@@ -25,10 +28,11 @@ import {
 import { FlaskConical, Pencil, Plus, Send, Trash2 } from "lucide-react";
 
 import { api } from "../api/cliente";
-import type { DocumentoLista, Paginado, Regra, Setor } from "../api/tipos";
+import type { DocumentoLista, Paginado, Regra, ResumoLacunas, Setor } from "../api/tipos";
 import { Cabecalho, Erro, Markdown, Pagina, TituloSecao } from "../componentes/comuns";
 import { cores, fonteMono } from "../tema";
 import { dataHora } from "../util/formatos";
+import Lacunas from "./Lacunas";
 
 const TIPOS = { procedimento: "Procedimento", faq: "Pergunta frequente", roteamento: "Encaminhamento", orientacao_acesso: "Orientação de acesso" };
 const STATUS = { rascunho: "Rascunho", publicada: "Publicada", arquivada: "Arquivada" };
@@ -44,6 +48,10 @@ interface Simulacao {
 export default function Regras() {
   const queryClient = useQueryClient();
   const [edicao, setEdicao] = useState<Partial<Regra> | null>(null);
+  const [lacunaEmEdicao, setLacunaEmEdicao] = useState<number | null>(null);
+  const [parametros, setParametros] = useSearchParams();
+  const aba = parametros.get("aba") === "lacunas" ? "lacunas" : "regras";
+  const resumoLacunas = useQuery({ queryKey: ["lacunas", "resumo"], queryFn: () => api<ResumoLacunas>("/lacunas/resumo/?dias=30") });
   const [pergunta, setPergunta] = useState("");
   const regras = useQuery({ queryKey: ["regras"], queryFn: () => api<Paginado<Regra>>("/motor/regras/?tamanho=100") });
   const simular = useMutation({ mutationFn: () => api<Simulacao>("/motor/regras/simular/", { method: "POST", json: { pergunta } }) });
@@ -64,6 +72,38 @@ export default function Regras() {
         acoes={<Button variant="contained" startIcon={<Plus size={16} />} onClick={() => setEdicao({ tipo: "faq", frases_exemplo: [], palavras_chave: [], termos_obrigatorios: [], termos_excludentes: [], padroes_regex: [], etapas: [], fontes: [], prioridade: 0 })}>Nova regra</Button>}
       />
 
+      <Tabs value={aba} onChange={(_, v) => setParametros(v === "lacunas" ? { aba: "lacunas" } : {}, { replace: true })} sx={{ mb: 3, borderBottom: `1px solid ${cores.borda}` }}>
+        <Tab value="regras" label="Regras" />
+        <Tab
+          value="lacunas"
+          label={
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              Lacunas do assistente
+              {!!resumoLacunas.data?.lacunas_pendentes && (
+                <Box
+                  component="span"
+                  aria-label={`${resumoLacunas.data.lacunas_pendentes} pendentes`}
+                  sx={{ minWidth: 22, height: 22, px: 0.75, borderRadius: 99, bgcolor: cores.cautela.fundo, color: cores.cautela.texto, border: `1px solid ${cores.cautela.borda}`, fontSize: 12, fontWeight: 600, display: "grid", placeItems: "center" }}
+                >
+                  {resumoLacunas.data.lacunas_pendentes > 99 ? "99+" : resumoLacunas.data.lacunas_pendentes}
+                </Box>
+              )}
+            </Box>
+          }
+        />
+      </Tabs>
+
+      {aba === "lacunas" && (
+        <Lacunas
+          regras={regras.data?.results ?? []}
+          aoEditarRegra={(regra, lacunaId) => {
+            setLacunaEmEdicao(lacunaId);
+            setEdicao(regra);
+          }}
+        />
+      )}
+
+      {aba === "regras" && (
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "minmax(0, 1fr) 400px" }, gap: 3 }}>
         <Box>
           {regras.isError && <Erro erro={regras.error} />}
@@ -144,7 +184,18 @@ export default function Regras() {
         </Paper>
       </Box>
 
-      {edicao && <EditorRegra regra={edicao} aoFechar={() => setEdicao(null)} />}
+      )}
+
+      {edicao && (
+        <EditorRegra
+          regra={edicao}
+          lacunaId={lacunaEmEdicao}
+          aoFechar={() => {
+            setEdicao(null);
+            setLacunaEmEdicao(null);
+          }}
+        />
+      )}
     </Pagina>
   );
 }
@@ -152,7 +203,7 @@ export default function Regras() {
 const linhas = (v: string) => v.split("\n").map((x) => x.trim()).filter(Boolean);
 const virgulas = (v: string) => v.split(",").map((x) => x.trim()).filter(Boolean);
 
-function EditorRegra({ regra, aoFechar }: { regra: Partial<Regra>; aoFechar: () => void }) {
+function EditorRegra({ regra, lacunaId, aoFechar }: { regra: Partial<Regra>; lacunaId?: number | null; aoFechar: () => void }) {
   const queryClient = useQueryClient();
   const setores = useQuery({ queryKey: ["setores", "todos"], queryFn: () => api<Paginado<Setor>>("/setores/?tamanho=100") });
   const [termoDoc, setTermoDoc] = useState("");
@@ -177,7 +228,7 @@ function EditorRegra({ regra, aoFechar }: { regra: Partial<Regra>; aoFechar: () 
 
   const salvar = useMutation({
     mutationFn: () =>
-      api(regra.id ? `/motor/regras/${regra.id}/` : "/motor/regras/", {
+      api<Regra>(regra.id ? `/motor/regras/${regra.id}/` : "/motor/regras/", {
         method: regra.id ? "PATCH" : "POST",
         json: {
           ...f,
@@ -197,7 +248,15 @@ function EditorRegra({ regra, aoFechar }: { regra: Partial<Regra>; aoFechar: () 
           fontes: fontes.map((x) => ({ documento: x.documento, pagina: x.pagina, secao: x.secao, trecho_citado: x.trecho_citado })),
         },
       }),
-    onSuccess: () => {
+    onSuccess: async (salva) => {
+      // Veio de uma lacuna do assistente: registra que ela foi tratada com esta regra.
+      if (lacunaId) {
+        await api(`/lacunas/${lacunaId}/tratar/`, {
+          method: "POST",
+          json: { regra: salva.id, observacao: regra.id ? "Regra ajustada." : "Regra criada." },
+        });
+        queryClient.invalidateQueries({ queryKey: ["lacunas"] });
+      }
       queryClient.invalidateQueries({ queryKey: ["regras"] });
       aoFechar();
     },
@@ -211,6 +270,11 @@ function EditorRegra({ regra, aoFechar }: { regra: Partial<Regra>; aoFechar: () 
     <Dialog open onClose={aoFechar} fullWidth maxWidth="md">
       <DialogTitle>{regra.id ? `Editar ${regra.codigo}` : "Nova regra"}</DialogTitle>
       <DialogContent sx={{ display: "grid", gap: 2, pt: "8px !important" }}>
+        {lacunaId && (
+          <Alert severity="info">
+            Ao salvar, a lacuna é marcada como tratada. A regra fica em rascunho e só responde depois de publicada.
+          </Alert>
+        )}
         {salvar.isError && <Alert severity="error">{(salvar.error as Error).message}</Alert>}
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "140px 1fr 200px" }, gap: 2 }}>
           {campo("codigo", "Código", { placeholder: "MD-010" })}
