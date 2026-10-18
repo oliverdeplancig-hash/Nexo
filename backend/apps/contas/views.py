@@ -25,7 +25,7 @@ from .serializers import (
 
 
 class LimiteLogin(AnonRateThrottle):
-    rate = "10/min"
+    scope = "login"  # NEXO_LIMITE_LOGIN (padrão 10/min por IP)
 
 
 @api_view(["GET"])

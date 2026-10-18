@@ -79,8 +79,9 @@ Senha dos usuários de demonstração: `Nexo@demo2026` (somente com `NEXO_DEBUG=
 ## Qualidade
 
 ```bash
-cd backend && python -m pytest && ruff check .     # 116 testes
+cd backend && python -m pytest && ruff check .     # 117 testes
 cd frontend && npm run build                       # checagem de tipos + build PWA
+cd frontend && npm run e2e                         # ponta a ponta + acessibilidade (Playwright)
 ```
 
 ## Documentação

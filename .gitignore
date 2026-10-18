@@ -27,3 +27,8 @@ backend/.copias-testes/
 *senha*.txt
 *Senha*.txt
 *SENHA*.txt
+# Testes de ponta a ponta
+backend/.armazenamento-e2e/
+backend/.copias-e2e/
+frontend/test-results/
+frontend/playwright-report/

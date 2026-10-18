@@ -142,7 +142,11 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 20,
     "DATETIME_FORMAT": "%Y-%m-%dT%H:%M:%S%z",
     "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.UserRateThrottle"],
-    "DEFAULT_THROTTLE_RATES": {"user": env("NEXO_LIMITE_REQUISICOES", default="600/min")},
+    "DEFAULT_THROTTLE_RATES": {
+        "user": env("NEXO_LIMITE_REQUISICOES", default="600/min"),
+        # Tentativas de login por IP. Só os testes de ponta a ponta afrouxam este limite.
+        "login": env("NEXO_LIMITE_LOGIN", default="10/min"),
+    },
 }
 
 # --------------------------------------------------------------------------

@@ -6,7 +6,7 @@ python -m pytest            # usa nexo.settings_teste (provedor de IA falso, det
 python -m pytest --create-db   # após mudar migrações
 ```
 
-Requer PostgreSQL com pgvector (o banco de teste é criado automaticamente). 116 testes cobrem:
+Requer PostgreSQL com pgvector (o banco de teste é criado automaticamente). 117 testes cobrem:
 
 | Área | Arquivo | Destaques |
 |---|---|---|
@@ -19,4 +19,30 @@ Requer PostgreSQL com pgvector (o banco de teste é criado automaticamente). 116
 | Ingestão | `ingestao/tests/test_extratores.py` | DOCX, HTML, OCR ausente, fatiamento estável |
 | Auditoria | `auditoria/tests/test_auditoria.py` | cadeia, adulteração detectada, gatilho |
 
-Frontend: `npm run build` (checagem de tipos). Verificação visual em 1440 px e 390 px.
+Frontend: `npm run build` (checagem de tipos).
+
+## Ponta a ponta e acessibilidade (ADR-017)
+
+```bash
+cd frontend
+npm run e2e            # sobe backend (banco nexo_e2e zerado, dados de demonstração) e frontend sozinho
+npm run e2e:relatorio  # abre o relatório da última execução
+```
+
+Requer PostgreSQL com pgvector; o banco é `E2E_DATABASE_URL` (padrão
+`postgres://nexo:nexo@localhost:5432/nexo_e2e`, criado se não existir). Navegador Chromium do Playwright
+(`npx playwright install chromium` na primeira vez).
+
+| Arquivo | O que cobre |
+|---|---|
+| `e2e/perfis.spec.ts` | menu por perfil, rota administrativa recusada, senha errada |
+| `e2e/assistente.spec.ts` | resposta aprovada com fonte; avaliação negativa chega às lacunas sem identificar o autor |
+| `e2e/colecoes.spec.ts` | criar coleção, adicionar e remover documentos, excluir sem apagar documentos |
+| `e2e/vigencia.spec.ts` | revogar tira da busca, faixa de revogação, restabelecer |
+| `e2e/ajuda.spec.ts` | Ajuda por perfil, botão "?" contextual, busca sem acentos |
+| `e2e/acessibilidade.spec.ts` | axe-core (WCAG 2.1 A/AA): violações sérias ou críticas reprovam, em 15 telas |
+| `e2e/celular.spec.ts` | smartphone: navegação inferior, menu, ajuda, sem rolagem horizontal |
+
+## Integração contínua
+`.github/workflows/ci.yml` roda a cada envio para `main` e em pull requests: backend (ruff + pytest),
+frontend (tipos + build) e, se passarem, ponta a ponta. Só dados fictícios e IA falsa.

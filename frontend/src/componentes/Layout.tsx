@@ -209,9 +209,14 @@ export default function Layout({ children }: { children: ReactNode }) {
                       "&:hover": { bgcolor: cores.barraLateralHover, color: cores.barraLateralTexto },
                     }}
                   >
-                    <Badge color="primary" badgeContent={compacta ? item.contador : 0} max={99}>
-                      {item.icone}
-                    </Badge>
+                    {/* Contador só existe quando há algo a contar: um "0" escondido era lido pelo leitor de tela. */}
+                    {compacta && item.contador ? (
+                      <Badge color="primary" badgeContent={item.contador} max={99}>
+                        {item.icone}
+                      </Badge>
+                    ) : (
+                      item.icone
+                    )}
                     {!compacta && <Box sx={{ flex: 1 }}>{item.rotulo}</Box>}
                     {!compacta && item.atalho && (
                       <Box component="kbd" sx={{ fontSize: 11, color: cores.barraLateralMudo, border: `1px solid ${cores.barraLateralHover}`, borderRadius: 1, px: 0.75 }}>
@@ -219,7 +224,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                       </Box>
                     )}
                     {!compacta && !!item.contador && (
-                      <Box sx={{ bgcolor: cores.primaria, color: "#fff", borderRadius: 99, px: 0.9, fontSize: 12, fontWeight: 600 }}>{item.contador}</Box>
+                      <Box aria-label={`${item.contador} não lidas`} sx={{ bgcolor: cores.primaria, color: "#fff", borderRadius: 99, px: 0.9, fontSize: 12, fontWeight: 600 }}>{item.contador}</Box>
                     )}
                   </Box>
                 </Tooltip>

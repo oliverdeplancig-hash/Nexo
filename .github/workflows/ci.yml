@@ -1,0 +1,114 @@
+# Integração contínua do Nexo (ADR-017). Usa somente dados FICTÍCIOS de demonstração e IA falsa:
+# nenhum dado institucional passa pelo GitHub.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
+
+jobs:
+  backend:
+    name: Backend (ruff + pytest)
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: nexo
+          POSTGRES_PASSWORD: nexo
+          POSTGRES_DB: nexo
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U nexo" --health-interval 5s --health-timeout 5s --health-retries 20
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - name: Pacotes do sistema (OCR e cliente PostgreSQL para as cópias de segurança)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-por postgresql-client
+      - run: pip install -r requirements-dev.txt
+      - name: Qualidade
+        run: ruff check . && ruff format --check .
+      - name: Testes
+        run: python -m pytest
+        env:
+          NEXO_DATABASE_URL: postgres://nexo:nexo@localhost:5432/nexo
+
+  frontend:
+    name: Frontend (tipos + build)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  e2e:
+    name: Ponta a ponta (Playwright + acessibilidade)
+    needs: [backend, frontend]
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: nexo
+          POSTGRES_PASSWORD: nexo
+          POSTGRES_DB: nexo
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U nexo" --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: pip install -r backend/requirements-dev.txt
+      - run: npm ci
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - name: Testes de ponta a ponta
+        run: npm run e2e
+        working-directory: frontend
+        env:
+          CI: "true"
+          E2E_DATABASE_URL: postgres://nexo:nexo@localhost:5432/nexo_e2e
+      - name: Relatório (em caso de falha)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-playwright
+          path: frontend/playwright-report
+          retention-days: 7

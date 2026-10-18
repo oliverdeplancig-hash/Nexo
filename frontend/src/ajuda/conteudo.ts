@@ -84,7 +84,7 @@ export const GRUPOS: Grupo[] = [
           "Quando a resposta indicar um setor responsável, use o contato informado para seguir com a demanda.",
         ],
         dicas: [
-          "O selo no alto da resposta diz de onde ela veio: “Resposta curada e aprovada” (regra da instituição), “Fundamentada em fontes citadas” (IA com citações) ou “Confira com atenção”.",
+          "O selo no alto da resposta diz de onde ela veio: “Resposta aprovada” (regra da instituição), “Com fontes citadas” (IA com citações) ou “Confira com atenção”.",
           "“Como esta resposta foi obtida” mostra o caminho percorrido (regra, busca, IA).",
           "Para perguntar sobre um documento específico, abra o documento e use “Perguntar à IA sobre este documento”.",
           "Suas conversas ficam em Histórico de conversas. Só você as vê.",
@@ -296,7 +296,7 @@ export const GRUPOS: Grupo[] = [
         funcao: "gerir_regras",
         telas: ["/motor"],
         resumo:
-          "Regras são respostas aprovadas pela instituição. Quando uma pergunta corresponde a uma regra publicada, o assistente devolve exatamente o texto cadastrado, sem IA, com o selo “Resposta curada e aprovada”.",
+          "Regras são respostas aprovadas pela instituição. Quando uma pergunta corresponde a uma regra publicada, o assistente devolve exatamente o texto cadastrado, sem IA, com o selo “Resposta aprovada”.",
         passos: [
           "Em Motor de respostas → Regras, clique em “Nova regra”.",
           "Escreva várias perguntas de exemplo, como os servidores perguntariam de verdade (uma por linha).",

@@ -17,7 +17,7 @@ avaliações (ADR-012). Também não havia lembrete para conferir documentos per
   - **sai do assistente e da busca padrão** (`documentos_filtrados` exclui revogados); a busca pode incluí-los
     por opção; perguntar sobre um documento específico continua possível;
   - regras do motor que o citam como fonte **continuam respondendo**, mas a resposta ganha um aviso de que o
-    fundamento foi revogado e o selo cai de "Resposta curada e aprovada" para "Confira com atenção"; na tela
+    fundamento foi revogado e o selo cai de "Resposta aprovada" para "Confira com atenção"; na tela
     de regras elas aparecem com "Fonte revogada: revise". Não são desligadas automaticamente: a resposta é
     curada por pessoas e quem decide é a gestão do motor.
 - **Revisão periódica**: `revisar_em` (próxima) e `revisado_em` (última). Quem mantém o documento é notificado

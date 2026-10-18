@@ -83,6 +83,7 @@ python manage.py processar_fila --continuo
 # frontend
 cd frontend && npm run dev                # http://localhost:5173 (proxy para :8000)
 npm run build
+npm run e2e                               # ponta a ponta + acessibilidade (ADR-017)
 ```
 
 ## 9. Git
