@@ -5,13 +5,14 @@ from django.http import FileResponse, Http404
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from rest_framework import mixins, status, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from apps.acesso.models import Acao, AutorizacaoDocumento
 from apps.acesso.servico import decidir, documentos_visiveis
 from apps.auditoria.servico import registrar
+from apps.comum.permissoes import exige_funcao
 from apps.contas.models import Funcao
 
 from . import colecoes as colecoes_regras
@@ -163,6 +164,9 @@ class DocumentoViewSet(
                 return Response({"substituido_por": ["Documento substituto não encontrado."]}, status=400)
         em = parse_date(str(request.data.get("revogado_em") or "")) if request.data.get("revogado_em") else None
         vigencia_regras.revogar(documento, motivo=motivo, substituido_por=substituto, em=em)
+        from .painel import avisar_regras_com_fonte_revogada
+
+        avisar_regras_com_fonte_revogada(documento)  # ADR-016
         registrar(
             request,
             "DOCUMENTO_ALTERADO",
@@ -374,3 +378,16 @@ class CategoriaViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
     pagination_class = None
+
+
+@api_view(["GET"])
+@permission_classes([exige_funcao(Funcao.IMPORTAR_DOCUMENTOS, Funcao.GERIR_REGRAS, Funcao.VER_AUDITORIA)])
+def painel_acervo(request):
+    """Painel do acervo (ADR-016): só o que a pessoa pode consultar."""
+    from .painel import painel
+
+    try:
+        dias = max(1, min(int(request.query_params.get("dias", 30)), 365))
+    except ValueError:
+        dias = 30
+    return Response(painel(request.user, dias))

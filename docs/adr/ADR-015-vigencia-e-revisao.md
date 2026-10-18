@@ -41,4 +41,4 @@ avaliações (ADR-012). Também não havia lembrete para conferir documentos per
 - O assistente deixa de citar normas revogadas sem intervenção técnica, assim que o documento é revogado.
 - Quem mantém documentos recebe notificações periódicas; o repositório ganha a aba "Para revisar".
 - Backlog: vigência futura (entra em vigor em), revogação parcial (dispositivos), relatório de revisões por
-  setor e aviso automático à gestão do motor quando uma fonte de regra é revogada.
+  setor e aviso automático à gestão do motor quando uma fonte de regra é revogada (atendido pela ADR-016).

@@ -19,3 +19,4 @@ Formato `ADR-NNN-titulo.md`. Status inicial **Proposta**; ADR aceita não se edi
 | [ADR-013](ADR-013-colecoes.md) | Coleções pessoais e institucionais sem efeito sobre permissões | Proposta | 2026-10-18 |
 | [ADR-014](ADR-014-ajuda-por-perfil.md) | Ajuda contextual por perfil, com conteúdo versionado no código | Proposta | 2026-10-18 |
 | [ADR-015](ADR-015-vigencia-e-revisao.md) | Vigência e revisão periódica de documentos | Proposta | 2026-10-18 |
+| [ADR-016](ADR-016-painel-do-acervo.md) | Painel do acervo e aviso de regra com fonte revogada | Proposta | 2026-10-18 |

@@ -251,6 +251,26 @@ export const GRUPOS: Grupo[] = [
         ],
       },
       {
+        id: "painel-acervo",
+        titulo: "Painel do acervo",
+        funcao: ["importar_documentos", "gerir_regras", "ver_auditoria"],
+        telas: ["/painel-acervo"],
+        resumo:
+          "O Painel do acervo mostra a situação dos documentos que você pode consultar: quantos estão vigentes e revogados, revisões atrasadas e próximas, a situação de cada setor e os documentos mais consultados.",
+        passos: [
+          "Abra Painel do acervo, no grupo Governança do menu.",
+          "Confira os indicadores no topo; “Revisões atrasadas” fica destacado quando há pendências.",
+          "Na tabela por setor, veja onde se concentram revogações, atrasos e documentos sem data de revisão.",
+          "Clique num documento da lista de revisões atrasadas para revisá-lo ou revogá-lo.",
+          "Em “Mais consultados”, escolha o período (7, 30 ou 90 dias) para ver o que os servidores mais abrem.",
+        ],
+        dicas: [
+          "Os números consideram só os documentos que o seu perfil pode consultar; documentos restritos a outros setores não entram nas contas.",
+          "“Mais consultados” vem da auditoria e mostra apenas a quantidade de aberturas, nunca quem abriu.",
+          "Documentos muito consultados e sem revisão programada são bons candidatos para ganhar uma data de revisão ou virar resposta aprovada no motor.",
+        ],
+      },
+      {
         id: "vigencia",
         titulo: "Vigência e revisão de documentos",
         funcao: "importar_documentos",
@@ -266,7 +286,7 @@ export const GRUPOS: Grupo[] = [
         ],
         dicas: [
           "Quem mantém o documento recebe uma notificação 30 dias antes da revisão e, se atrasar, de novo a cada semana.",
-          "Documento revogado sai do assistente e da busca padrão, mas continua no repositório. Regras do motor baseadas nele ganham o aviso “Fonte revogada: revise”.",
+          "Documento revogado sai do assistente e da busca padrão, mas continua no repositório. Regras do motor baseadas nele ganham o aviso “Fonte revogada: revise”, e quem mantém essas regras é notificado.",
           "Revogar, restabelecer e registrar revisão ficam na auditoria.",
         ],
       },

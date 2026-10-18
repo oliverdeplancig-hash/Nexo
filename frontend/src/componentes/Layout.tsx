@@ -22,6 +22,7 @@ import {
   Clock,
   FileUp,
   FolderTree,
+  Gauge,
   HelpCircle,
   History,
   Library,
@@ -108,6 +109,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     {
       titulo: "Governança",
       itens: [
+        { rotulo: "Painel do acervo", para: "/painel-acervo", icone: <Gauge size={18} />, funcao: ["importar_documentos", "gerir_regras", "ver_auditoria"] },
         { rotulo: "Importar documentos", para: "/importacao", icone: <FileUp size={18} />, funcao: "importar_documentos" },
         { rotulo: "Motor de respostas", para: "/motor", icone: <Workflow size={18} />, funcao: "gerir_regras" },
         { rotulo: "Administração", para: "/administracao", icone: <Settings2 size={18} />, funcao: ["admin_usuarios", "admin_permissoes"] },

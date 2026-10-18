@@ -85,3 +85,8 @@ Servidor → `notificacao`, `processamento` (progresso da ingestão do próprio 
 | POST | `documentos/{id}/revisao/` | `{proxima: AAAA-MM-DD \| null}` registra a revisão de hoje |
 | GET | `documentos/?aba=revisao` | Documentos que a pessoa pode editar com revisão em até 30 dias ou atrasada |
 | GET | `documentos/?vigencia=vigente\|revogado` · `busca/?revogados=1` | Filtros; a busca exclui revogados por padrão |
+
+## Painel do acervo (ADR-016)
+| Método | Caminho | Descrição |
+|---|---|---|
+| GET | `painel/acervo/?dias=30` | Totais, por setor, revisões atrasadas e mais consultados — só sobre documentos visíveis. Exige `importar_documentos`, `gerir_regras` ou `ver_auditoria` |

@@ -17,6 +17,7 @@ const Importacao = lazy(() => import("./paginas/Importacao"));
 const Administracao = lazy(() => import("./paginas/Administracao"));
 const Auditoria = lazy(() => import("./paginas/Auditoria"));
 const Regras = lazy(() => import("./paginas/Regras"));
+const PainelAcervo = lazy(() => import("./paginas/PainelAcervo"));
 const Notificacoes = lazy(() => import("./paginas/Notificacoes"));
 const Perfil = lazy(() => import("./paginas/Perfil"));
 const Historico = lazy(() => import("./paginas/Historico"));
@@ -70,6 +71,7 @@ export default function App() {
             <Route path="/perfil" element={<Perfil />} />
             <Route path="/importacao" element={<Exige funcao="importar_documentos"><Importacao /></Exige>} />
             <Route path="/motor" element={<Exige funcao="gerir_regras"><Regras /></Exige>} />
+            <Route path="/painel-acervo" element={<Exige funcao={["importar_documentos", "gerir_regras", "ver_auditoria"]}><PainelAcervo /></Exige>} />
             <Route
               path="/administracao"
               element={<Exige funcao={["admin_usuarios", "admin_permissoes"]}><Administracao /></Exige>}
