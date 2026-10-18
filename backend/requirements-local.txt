@@ -1,0 +1,5 @@
+# Instalação local sem servidor PostgreSQL: PostgreSQL 16 + pgvector embutidos.
+# Usado por scripts/iniciar-windows.cmd. NÃO usar no servidor da instituição.
+-r requirements-dev.txt
+pgserver==0.1.4
+tzdata>=2024.1

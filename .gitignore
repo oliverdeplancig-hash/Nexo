@@ -17,3 +17,6 @@ frontend/dev-dist/
 Thumbs.db
 *.log
 .env
+backend/.pgdata/
+scripts/*.log
+scripts/diagnostico.txt

@@ -7,6 +7,7 @@ com desempate pelo id do trecho (resultado estável para a mesma entrada).
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from django.conf import settings
@@ -18,6 +19,7 @@ from pgvector.django import CosineDistance
 from apps.acesso.models import Acao
 from apps.acesso.servico import documentos_visiveis
 from apps.comum import texto
+from apps.comum.banco import tem_unaccent
 from apps.documentos.models import Documento, Trecho
 from apps.ia.provedores import ProvedorIndisponivel, obter_provedor
 
@@ -38,12 +40,23 @@ class Resultado:
 
 
 def consulta_tsquery(consulta: str) -> SearchQuery | None:
-    """Termos unidos por OU (perguntas em linguagem natural raramente casam com E)."""
-    termos = [p for p in texto.normalizar(consulta).split() if p not in texto.STOPWORDS and len(p) > 1]
+    """Termos unidos por OU (perguntas em linguagem natural raramente casam com E).
+
+    Cada termo entra com e sem acento: funciona com a configuração `nexo_pt`
+    com unaccent (servidor) e sem ela (PostgreSQL embutido local).
+    """
+    minusculas = re.sub(r"[^\w\s]", " ", consulta.lower()).split()
+    termos: list[str] = []
+    for palavra in minusculas:
+        sem_acento = texto.remover_acentos(palavra)
+        if sem_acento in texto.STOPWORDS or len(sem_acento) < 2:
+            continue
+        for forma in (palavra, sem_acento):
+            if forma not in termos:
+                termos.append(forma)
     if not termos:
         return None
-    termos = list(dict.fromkeys(termos))[:20]
-    return SearchQuery(" | ".join(termos), config=CONFIG_FTS, search_type="raw")
+    return SearchQuery(" | ".join(termos[:30]), config=CONFIG_FTS, search_type="raw")
 
 
 def documentos_filtrados(usuario, filtros: dict | None = None, documento_id: int | None = None):
@@ -123,11 +136,16 @@ def buscar_trechos(
             diagnostico["semantica_disponivel"] = False
 
     if modo in ("hibrida", "nome") and consulta.strip():
-        termos = [t for t in texto.normalizar(consulta).split() if len(t) > 2 and t not in texto.STOPWORDS]
+        # Sem unaccent, o título é comparado com a grafia digitada (com acentos).
+        base_termos = texto.normalizar(consulta) if tem_unaccent() else re.sub(r"[^\w\s]", " ", consulta.lower())
+        termos = [t for t in base_termos.split() if len(t) > 2 and texto.remover_acentos(t) not in texto.STOPWORDS]
         if termos:
+            campo_titulo = (
+                "documento__titulo__unaccent__icontains" if tem_unaccent() else "documento__titulo__icontains"
+            )
             cond = Q()
             for t in termos[:6]:
-                cond &= Q(documento__titulo__unaccent__icontains=t) | Q(documento__numero_referencia__icontains=t)
+                cond &= Q(**{campo_titulo: t}) | Q(documento__numero_referencia__icontains=t)
             por_nome = base.filter(cond).order_by("documento_id", "ordem").distinct("documento_id")[:20]
             for posicao, trecho in enumerate(por_nome, start=1):
                 _somar(trecho, posicao, "nome")
