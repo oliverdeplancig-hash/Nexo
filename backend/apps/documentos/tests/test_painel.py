@@ -28,7 +28,11 @@ def test_painel_conta_so_o_que_a_pessoa_ve(cliente, usuarios, criar_documento):
     assert [d["titulo"] for d in dados["revisoes_atrasadas"]] == ["Manual geral"]
     assert dados["revisoes_atrasadas"][0]["dias_atraso"] == 4
     assert dados["mais_consultados"][0] == {
-        "id": geral.id, "titulo": "Manual geral", "setor": "GP", "vigencia": "vigente", "aberturas": 2
+        "id": geral.id,
+        "titulo": "Manual geral",
+        "setor": "GP",
+        "vigencia": "vigente",
+        "aberturas": 2,
     }
     assert "Plano restrito TI" not in str(dados)
     assert "gestor" not in str(dados["mais_consultados"])  # sem quem abriu
