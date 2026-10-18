@@ -23,3 +23,7 @@ scripts/diagnostico.txt
 backend/.tessdata/
 backend/copias/
 backend/.copias-testes/
+# Segredos locais anotados pelo usuario: nunca versionar
+*senha*.txt
+*Senha*.txt
+*SENHA*.txt
