@@ -13,6 +13,8 @@ inicial e versões menores podem mudar comportamento.
   trechos quando ela está ocupada, conjunto de conexões do banco, teste de carga (`manage.py teste_carga`),
   processos web extras no Linux e guia de dimensionamento (ADR-020).
 - Modo de ensaio do servidor de rede (`instalar-servidor-windows.cmd teste`) e desinstalação sem perda de dados.
+- Cadastro com link para a pessoa criar a própria senha, sem senha por e-mail; o administrador pode reenviar o
+  link (ADR-027).
 - Especificação OpenAPI em `/api/v1/esquema/` e documentação navegável em `/api/v1/documentacao/`, para a TI (ADR-026).
 - Avaliação da qualidade das respostas (`manage.py avaliar_respostas`), carga do acervo por pasta
   (`manage.py importar_pasta`) e conjunto de referência na CI (ADR-025).

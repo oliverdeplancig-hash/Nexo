@@ -72,6 +72,15 @@ export function EsqueciSenha() {
 }
 
 export function RedefinirSenha() {
+  return <CriarSenhaPeloLink endpoint="/auth/redefinir-senha/" titulo="Criar nova senha" pedirNovo />;
+}
+
+/** Link de ativação enviado no cadastro (ADR-027). */
+export function AtivarConta() {
+  return <CriarSenhaPeloLink endpoint="/auth/ativar-conta/" titulo="Criar sua senha do Nexo" />;
+}
+
+function CriarSenhaPeloLink({ endpoint, titulo, pedirNovo = false }: { endpoint: string; titulo: string; pedirNovo?: boolean }) {
   const [parametros] = useSearchParams();
   const u = parametros.get("u") ?? "";
   const t = parametros.get("t") ?? "";
@@ -83,7 +92,7 @@ export function RedefinirSenha() {
   const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {
-    api<{ usuario: string }>("/auth/redefinir-senha/", { method: "POST", json: { u, t } })
+    api<{ usuario: string }>(endpoint, { method: "POST", json: { u, t } })
       .then((r) => {
         setUsuario(r.usuario);
         setSituacao("valido");
@@ -92,14 +101,14 @@ export function RedefinirSenha() {
         setMensagem(err instanceof Error ? err.message : "Link inválido.");
         setSituacao("invalido");
       });
-  }, [u, t]);
+  }, [endpoint, u, t]);
 
   async function enviar(e: FormEvent) {
     e.preventDefault();
     setErroSenha("");
     setEnviando(true);
     try {
-      const r = await api<{ detail: string }>("/auth/redefinir-senha/", { method: "POST", json: { u, t, nova_senha: f.nova } });
+      const r = await api<{ detail: string }>(endpoint, { method: "POST", json: { u, t, nova_senha: f.nova } });
       setMensagem(r.detail);
       setSituacao("concluido");
     } catch (err) {
@@ -116,10 +125,13 @@ export function RedefinirSenha() {
 
   const diferentes = f.confirmacao.length > 0 && f.nova !== f.confirmacao;
   return (
-    <Moldura titulo="Criar nova senha">
+    <Moldura titulo={titulo}>
       {situacao === "verificando" && <Typography variant="body2">Conferindo o link…</Typography>}
       {situacao === "invalido" && (
-        <Alert severity="error" action={<Button component={RouterLink} to="/esqueci-senha" color="inherit" size="small">Pedir novo</Button>}>
+        <Alert
+          severity="error"
+          action={pedirNovo ? <Button component={RouterLink} to="/esqueci-senha" color="inherit" size="small">Pedir novo</Button> : undefined}
+        >
           {mensagem}
         </Alert>
       )}

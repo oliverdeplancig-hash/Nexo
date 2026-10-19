@@ -21,6 +21,14 @@ export interface Usuario {
   pode_alterar_senha: boolean;
 }
 
+/** Link para a pessoa criar a própria senha (ADR-027). */
+export interface LinkEnviado {
+  enviado_por_email: boolean;
+  destino_email: string;
+  expira_em: string | null;
+  aviso: string;
+}
+
 export interface Credenciais {
   usuario: string;
   senha_temporaria: string;

@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../backend"
 export NEXO_DEBUG=true NEXO_IA_PROVEDOR=falso NEXO_PROCESSAR_IMEDIATAMENTE=true NEXO_OCR_MOTOR=desligado
-export NEXO_LIMITE_LOGIN=1000/min  # a suíte entra muitas vezes seguidas; produção mantém 10/min
+export NEXO_LIMITE_LOGIN=1000/min NEXO_LIMITE_RECUPERACAO=1000/hour  # a suíte repete muito; produção mantém 10/min e 5/h
 export NEXO_DATABASE_URL="${E2E_DATABASE_URL:-postgres://nexo:nexo@localhost:5432/nexo_e2e}"
 export NEXO_ARMAZENAMENTO_DIR="$PWD/.armazenamento-e2e"
 export NEXO_BACKUP_DIR="$PWD/.copias-e2e"

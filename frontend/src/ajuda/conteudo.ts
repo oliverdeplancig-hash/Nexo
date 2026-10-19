@@ -70,7 +70,7 @@ export const GRUPOS: Grupo[] = [
         titulo: "Primeiro acesso e senha",
         telas: ["/perfil"],
         resumo:
-          "Quando o seu acesso é criado, você recebe por e-mail (ou do administrador) o usuário e uma senha temporária. No primeiro acesso o Nexo pede que você crie a sua própria senha.",
+          "Quando o seu acesso é criado, você recebe por e-mail um link para criar a sua senha, ou (se o envio de e-mail não estiver ativo) o usuário e uma senha temporária do administrador. Com a senha temporária, o Nexo pede que você crie a sua no primeiro acesso.",
         passos: [
           "Entre com o usuário e a senha temporária.",
           "Na tela “Crie a sua senha”, digite a senha temporária, a nova senha e repita a nova senha.",
@@ -363,9 +363,9 @@ export const GRUPOS: Grupo[] = [
           "Em Administração → Usuários você cadastra servidores, define setor e perfis, e ativa ou desativa contas. No cadastro, o Nexo pode gerar a senha e enviar o acesso por e-mail.",
         passos: [
           "Clique em “Cadastrar usuário” e preencha usuário, nome, e-mail institucional, setor e perfis.",
-          "Em “Senha de acesso”, deixe “Gerar senha e enviar por e-mail” e clique em “Salvar e enviar acesso”.",
-          "Confira a janela “Acesso criado”: ela confirma o envio ou mostra a senha para você entregar, se o e-mail não puder ser enviado. A senha aparece só nesse momento.",
-          "Para quem esqueceu a senha, use o ícone de chave na linha do usuário (“Gerar nova senha”).",
+          "Em “Senha de acesso”, prefira “Enviar link para a pessoa criar a senha” (aparece quando o envio de e-mail está configurado): ninguém além dela conhece a senha.",
+          "Sem e-mail configurado, use “Gerar senha e enviar por e-mail”: a janela “Acesso criado” confirma o envio ou mostra a senha para você entregar. A senha aparece só nesse momento.",
+          "Para quem esqueceu a senha, use o ícone de chave na linha do usuário: “Enviar link para criar senha” ou “Gerar nova senha”.",
         ],
         dicas: [
           "A senha gerada é temporária: vale por poucos dias e, no primeiro acesso, a pessoa cria a própria senha. Até lá, a linha mostra “Aguardando 1º acesso”.",

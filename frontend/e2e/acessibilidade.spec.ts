@@ -3,7 +3,7 @@ import { test } from "@playwright/test";
 import { entrar, semViolacoesGraves } from "./apoio";
 
 test("telas sem login: entrada e recuperação de senha", async ({ page }) => {
-  for (const tela of ["/entrar", "/esqueci-senha", "/redefinir-senha?u=x&t=y"]) {
+  for (const tela of ["/entrar", "/esqueci-senha", "/redefinir-senha?u=x&t=y", "/ativar-conta?u=x&t=y"]) {
     await page.goto(tela);
     await page.waitForLoadState("networkidle");
     await semViolacoesGraves(page, tela);

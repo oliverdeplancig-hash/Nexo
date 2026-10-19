@@ -18,7 +18,7 @@ from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from apps.auditoria.servico import registrar
 from apps.comum.permissoes import exige_funcao
 
-from . import credenciais, entra, recuperacao
+from . import ativacao, credenciais, entra, recuperacao
 from .models import FUNCOES_CRITICAS, Funcao, Perfil, Usuario
 from .serializers import (
     MeuUsuarioSerializer,
@@ -77,6 +77,7 @@ def provedores(request):
         {
             "senha_local": settings.NEXO_LOGIN_LOCAL,
             "recuperar_senha": recuperacao.disponivel(),  # ADR-024
+            "link_por_email": ativacao.disponivel(),  # ADR-027
             "microsoft": {"ativo": entra.ativo(), "rotulo": settings.NEXO_ENTRA["ROTULO"]},
         }
     )
@@ -202,10 +203,18 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         gerar = serializer.validated_data.get("gerar_senha", False)
+        link = serializer.validated_data.get("enviar_link", False)
+        if link and not (ativacao.disponivel() and serializer.validated_data.get("email")):
+            return Response(
+                {"enviar_link": ["O link exige o envio de e-mail configurado e o e-mail institucional da pessoa."]},
+                status=400,
+            )
         self.perform_create(serializer)
         dados = dict(serializer.data)
         if gerar:
             dados["credenciais"] = _dados_credenciais(credenciais.emitir(serializer.instance, request, "cadastro"))
+        elif link:
+            dados["link"] = _dados_link(ativacao.enviar_link(serializer.instance, request, "cadastro"))
         return Response(dados, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["post"], url_path="gerar-senha")
@@ -217,6 +226,20 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         if usuario.tem_funcao(Funcao.ADMIN_PERMISSOES) and not request.user.tem_funcao(Funcao.ADMIN_PERMISSOES):
             raise PermissionDenied("Somente administradores de permissões podem redefinir a senha deste usuário.")
         return Response(_dados_credenciais(credenciais.emitir(usuario, request, "redefinicao")))
+
+    @action(detail=True, methods=["post"], url_path="enviar-link")
+    def enviar_link(self, request, pk=None):
+        """Envia link para a pessoa criar uma nova senha, sem senha temporária (ADR-027)."""
+        usuario = self.get_object()
+        if usuario.id_externo and not usuario.has_usable_password():
+            return Response({"detail": "Este usuário entra pela conta Microsoft institucional."}, status=400)
+        if usuario.tem_funcao(Funcao.ADMIN_PERMISSOES) and not request.user.tem_funcao(Funcao.ADMIN_PERMISSOES):
+            raise PermissionDenied("Somente administradores de permissões podem redefinir o acesso deste usuário.")
+        if not ativacao.disponivel() or not usuario.email:
+            return Response(
+                {"detail": "O link exige o envio de e-mail configurado e um e-mail cadastrado."}, status=400
+            )
+        return Response(_dados_link(ativacao.enviar_link(usuario, request, "redefinicao")))
 
     def perform_create(self, serializer):
         self._verificar_perfis_criticos(serializer)
@@ -259,6 +282,15 @@ class PerfilViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         registrar(self.request, "ADMIN_PERMISSAO", objeto=instance, detalhes={"acao": "excluir_perfil"})
         instance.delete()
+
+
+def _dados_link(e) -> dict:
+    return {
+        "enviado_por_email": e.enviado,
+        "destino_email": e.destino_email,
+        "expira_em": e.expira_em,
+        "aviso": e.aviso,
+    }
 
 
 def _dados_credenciais(c) -> dict:

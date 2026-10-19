@@ -30,3 +30,4 @@ Formato `ADR-NNN-titulo.md`. Status inicial **Proposta**; ADR aceita não se edi
 | [ADR-024](ADR-024-recuperacao-de-senha.md) | Recuperação de senha pelo próprio usuário com link de uso único | Proposta | 2026-10-19 |
 | [ADR-025](ADR-025-avaliacao-das-respostas.md) | Avaliação contínua da qualidade das respostas com perguntas de referência | Proposta | 2026-10-19 |
 | [ADR-026](ADR-026-especificacao-openapi.md) | Especificação OpenAPI da API, restrita à TI e sem CDN | Proposta | 2026-10-19 |
+| [ADR-027](ADR-027-link-de-ativacao.md) | Link de ativação no cadastro: a pessoa cria a própria senha | Proposta | 2026-10-19 |

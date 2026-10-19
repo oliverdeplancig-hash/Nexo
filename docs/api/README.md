@@ -11,12 +11,13 @@ Paginação: `?page=N&tamanho=M` → `{count, next, previous, results}`.
 |---|---|---|
 | GET | `auth/csrf/` | Emite cookie CSRF |
 | POST | `auth/entrar/` | `{usuario, senha}` (403 se `NEXO_LOGIN_LOCAL=false`) |
-| GET | `auth/provedores/` | Formas de entrada ativas: `{senha_local, recuperar_senha, microsoft: {ativo, rotulo}}` |
+| GET | `auth/provedores/` | Formas de entrada ativas: `{senha_local, recuperar_senha, link_por_email, microsoft: {ativo, rotulo}}` |
 | GET | `auth/microsoft/?destino=/caminho` | Redireciona para o login Microsoft (ADR-010) |
 | GET | `auth/microsoft/retorno/` | Retorno da Microsoft; cria a sessão e redireciona ao destino, ou a `/entrar?erro=<código>` |
 | POST | `auth/trocar-senha/` | `{senha_atual, nova_senha}` — obrigatório no 1º acesso com senha temporária (ADR-018) |
 | POST | `auth/esqueci-senha/` | `{identificacao}` usuário ou e-mail → resposta sempre igual; envia link se a conta puder recuperar (ADR-024) |
 | POST | `auth/redefinir-senha/` | `{u, t}` confere o link · `{u, t, nova_senha}` cria a senha |
+| POST | `auth/ativar-conta/` | Link de ativação do cadastro: `{u, t}` confere · `{u, t, nova_senha}` cria a senha (ADR-027) |
 | POST | `auth/sair/` | Encerra a sessão |
 | GET | `auth/eu/` | Usuário, setor, perfis e funções |
 
@@ -104,5 +105,6 @@ Servidor → `notificacao`, `processamento` (progresso da ingestão do próprio 
 |---|---|---|
 | POST | `usuarios/` com `gerar_senha: true` | Cadastra, gera senha temporária e envia por e-mail; a resposta traz `credenciais` (única vez) |
 | POST | `usuarios/{id}/gerar-senha/` | Nova senha temporária para quem esqueceu (invalida a anterior) |
+| POST | `usuarios/{id}/enviar-link/` | Link por e-mail para a pessoa criar nova senha, sem senha temporária (ADR-027) |
 
 Enquanto `trocar_senha` for verdadeiro em `auth/eu/`, as demais rotas respondem 403 `{"codigo": "trocar_senha"}`.

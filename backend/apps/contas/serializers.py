@@ -68,6 +68,7 @@ class MeuUsuarioSerializer(serializers.ModelSerializer):
 class UsuarioAdminSerializer(serializers.ModelSerializer):
     senha = serializers.CharField(write_only=True, required=False, allow_blank=False)
     gerar_senha = serializers.BooleanField(write_only=True, required=False, default=False)
+    enviar_link = serializers.BooleanField(write_only=True, required=False, default=False)  # ADR-027
     setor_nome = serializers.CharField(source="setor.nome", read_only=True, default=None)
 
     class Meta:
@@ -88,6 +89,7 @@ class UsuarioAdminSerializer(serializers.ModelSerializer):
             "date_joined",
             "senha",
             "gerar_senha",
+            "enviar_link",
             "senha_temporaria",
             "senha_temporaria_expira_em",
             "tem_login_microsoft",
@@ -101,14 +103,17 @@ class UsuarioAdminSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         senha = attrs.get("senha")
-        if senha and attrs.get("gerar_senha"):
-            raise serializers.ValidationError({"senha": "Escolha: gerar a senha ou informar uma senha."})
+        if sum(bool(x) for x in (senha, attrs.get("gerar_senha"), attrs.get("enviar_link"))) > 1:
+            raise serializers.ValidationError(
+                {"senha": "Escolha uma forma de acesso: link, senha gerada ou senha informada."}
+            )
         if senha:
             validate_password(senha)
         return attrs
 
     def create(self, validated_data):
         validated_data.pop("gerar_senha", None)  # tratado na view (ADR-018)
+        validated_data.pop("enviar_link", None)  # tratado na view (ADR-027)
         senha = validated_data.pop("senha", None)
         perfis = validated_data.pop("perfis", [])
         usuario = Usuario(**validated_data)
@@ -123,6 +128,7 @@ class UsuarioAdminSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         validated_data.pop("gerar_senha", None)
+        validated_data.pop("enviar_link", None)
         senha = validated_data.pop("senha", None)
         perfis = validated_data.pop("perfis", None)
         for campo, valor in validated_data.items():

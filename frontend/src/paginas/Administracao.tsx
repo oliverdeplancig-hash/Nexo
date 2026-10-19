@@ -34,7 +34,7 @@ import {
 import { Check, KeyRound, Minus, Pencil, Plus, Search, ShieldAlert, Trash2 } from "lucide-react";
 
 import { api } from "../api/cliente";
-import type { Autorizacao, Credenciais, DocumentoLista, Paginado, Perfil, Setor, UsuarioAdmin } from "../api/tipos";
+import type { Autorizacao, Credenciais, DocumentoLista, LinkEnviado, Paginado, Perfil, Setor, UsuarioAdmin } from "../api/tipos";
 import { Cabecalho, Erro, Pagina } from "../componentes/comuns";
 import { useAutenticacao } from "../contexto/Autenticacao";
 import { cores } from "../tema";
@@ -76,6 +76,10 @@ function Usuarios() {
   const [busca, setBusca] = useState("");
   const [edicao, setEdicao] = useState<Partial<UsuarioAdmin> | null>(null);
   const [credenciais, setCredenciais] = useState<Credenciais | null>(null);
+  const [linkEnviado, setLinkEnviado] = useState<LinkEnviado | null>(null);
+  // Link para criar a senha (ADR-027) só existe com o envio de e-mail configurado.
+  const provedores = useQuery({ queryKey: ["provedores"], queryFn: () => api<{ link_por_email?: boolean }>("/auth/provedores/") });
+  const linkDisponivel = !!provedores.data?.link_por_email;
   const [novaSenhaPara, setNovaSenhaPara] = useState<UsuarioAdmin | null>(null);
   const usuarios = useQuery({ queryKey: ["usuarios", busca], queryFn: () => api<Paginado<UsuarioAdmin>>(`/usuarios/?q=${encodeURIComponent(busca)}&tamanho=50`) });
   const setores = useQuery({ queryKey: ["setores", "todos"], queryFn: () => api<Paginado<Setor>>("/setores/?tamanho=100") });
@@ -138,10 +142,21 @@ function Usuarios() {
           perfis={perfis.data?.results ?? []}
           aoFechar={() => setEdicao(null)}
           aoGerarCredenciais={setCredenciais}
+          aoEnviarLink={setLinkEnviado}
+          linkDisponivel={linkDisponivel}
         />
       )}
-      {novaSenhaPara && <DialogoNovaSenha usuario={novaSenhaPara} aoFechar={() => setNovaSenhaPara(null)} aoGerar={setCredenciais} />}
+      {novaSenhaPara && (
+        <DialogoNovaSenha
+          usuario={novaSenhaPara}
+          aoFechar={() => setNovaSenhaPara(null)}
+          aoGerar={setCredenciais}
+          aoEnviarLink={setLinkEnviado}
+          linkDisponivel={linkDisponivel}
+        />
+      )}
       {credenciais && <DialogoCredenciais credenciais={credenciais} aoFechar={() => setCredenciais(null)} />}
+      {linkEnviado && <DialogoLinkEnviado link={linkEnviado} aoFechar={() => setLinkEnviado(null)} />}
     </>
   );
 }
@@ -152,14 +167,18 @@ function DialogoUsuario({
   perfis,
   aoFechar,
   aoGerarCredenciais,
+  aoEnviarLink,
+  linkDisponivel,
 }: {
   usuario: Partial<UsuarioAdmin>;
   setores: Setor[];
   perfis: Perfil[];
   aoFechar: () => void;
   aoGerarCredenciais: (c: Credenciais) => void;
+  aoEnviarLink: (l: LinkEnviado) => void;
+  linkDisponivel: boolean;
 }) {
-  const [modoSenha, setModoSenha] = useState<"gerar" | "manual">("gerar");
+  const [modoSenha, setModoSenha] = useState<"link" | "gerar" | "manual">(linkDisponivel ? "link" : "gerar");
   const queryClient = useQueryClient();
   const [f, setF] = useState({
     username: usuario.username ?? "",
@@ -178,8 +197,12 @@ function DialogoUsuario({
         corpo.gerar_senha = true;
         delete corpo.senha;
       }
+      if (!usuario.id && modoSenha === "link") {
+        corpo.enviar_link = true;
+        delete corpo.senha;
+      }
       if (!corpo.senha) delete corpo.senha;
-      return api<UsuarioAdmin & { credenciais?: Credenciais }>(usuario.id ? `/usuarios/${usuario.id}/` : "/usuarios/", {
+      return api<UsuarioAdmin & { credenciais?: Credenciais; link?: LinkEnviado }>(usuario.id ? `/usuarios/${usuario.id}/` : "/usuarios/", {
         method: usuario.id ? "PATCH" : "POST",
         json: corpo,
       });
@@ -187,6 +210,7 @@ function DialogoUsuario({
     onSuccess: (r) => {
       queryClient.invalidateQueries({ queryKey: ["usuarios"] });
       if (r.credenciais) aoGerarCredenciais(r.credenciais);
+      if (r.link) aoEnviarLink(r.link);
       aoFechar();
     },
   });
@@ -220,12 +244,17 @@ function DialogoUsuario({
           ))}
         </TextField>
         {!usuario.id && (
-          <TextField select id="usuario-modo-senha" label="Senha de acesso" value={modoSenha} onChange={(e) => setModoSenha(e.target.value as "gerar" | "manual")}>
+          <TextField select id="usuario-modo-senha" label="Senha de acesso" value={modoSenha} onChange={(e) => setModoSenha(e.target.value as "link" | "gerar" | "manual")}>
+            {linkDisponivel && <MenuItem value="link">Enviar link para a pessoa criar a senha (recomendado)</MenuItem>}
             <MenuItem value="gerar">Gerar senha e enviar por e-mail</MenuItem>
             <MenuItem value="manual">Definir a senha inicial</MenuItem>
           </TextField>
         )}
-        {!usuario.id && modoSenha === "gerar" ? (
+        {!usuario.id && modoSenha === "link" ? (
+          <Alert severity="info" variant="outlined">
+            A pessoa recebe no e-mail acima um link para criar a própria senha. Nenhuma senha passa pelo e-mail nem por você.
+          </Alert>
+        ) : !usuario.id && modoSenha === "gerar" ? (
           <Alert severity="info" variant="outlined">
             O Nexo gera uma senha temporária e envia usuário, senha e endereço para o e-mail acima. No primeiro acesso a pessoa
             cria a própria senha. Se o e-mail não puder ser enviado, a senha aparece para você entregar.
@@ -247,9 +276,14 @@ function DialogoUsuario({
         <Button
           variant="contained"
           onClick={() => salvar.mutate()}
-          disabled={!f.username || salvar.isPending || (!usuario.id && modoSenha === "gerar" && !f.email.trim()) || (!usuario.id && modoSenha === "manual" && !f.senha)}
+          disabled={
+            !f.username ||
+            salvar.isPending ||
+            (!usuario.id && modoSenha !== "manual" && !f.email.trim()) ||
+            (!usuario.id && modoSenha === "manual" && !f.senha)
+          }
         >
-          {!usuario.id && modoSenha === "gerar" ? "Salvar e enviar acesso" : "Salvar usuário"}
+          {!usuario.id && modoSenha !== "manual" ? "Salvar e enviar acesso" : "Salvar usuário"}
         </Button>
       </DialogActions>
     </Dialog>
@@ -257,8 +291,28 @@ function DialogoUsuario({
 }
 
 /** Gera nova senha temporária para quem esqueceu a senha (ADR-018). */
-function DialogoNovaSenha({ usuario, aoFechar, aoGerar }: { usuario: UsuarioAdmin; aoFechar: () => void; aoGerar: (c: Credenciais) => void }) {
+function DialogoNovaSenha({
+  usuario,
+  aoFechar,
+  aoGerar,
+  aoEnviarLink,
+  linkDisponivel,
+}: {
+  usuario: UsuarioAdmin;
+  aoFechar: () => void;
+  aoGerar: (c: Credenciais) => void;
+  aoEnviarLink: (l: LinkEnviado) => void;
+  linkDisponivel: boolean;
+}) {
   const queryClient = useQueryClient();
+  const link = useMutation({
+    mutationFn: () => api<LinkEnviado>(`/usuarios/${usuario.id}/enviar-link/`, { method: "POST" }),
+    onSuccess: (l) => {
+      queryClient.invalidateQueries({ queryKey: ["usuarios"] });
+      aoEnviarLink(l);
+      aoFechar();
+    },
+  });
   const gerar = useMutation({
     mutationFn: () => api<Credenciais>(`/usuarios/${usuario.id}/gerar-senha/`, { method: "POST" }),
     onSuccess: (c) => {
@@ -272,6 +326,7 @@ function DialogoNovaSenha({ usuario, aoFechar, aoGerar }: { usuario: UsuarioAdmi
       <DialogTitle>Gerar nova senha para {usuario.username}?</DialogTitle>
       <DialogContent>
         {gerar.isError && <Alert severity="error" sx={{ mb: 2 }}>{(gerar.error as Error).message}</Alert>}
+        {link.isError && <Alert severity="error" sx={{ mb: 2 }}>{(link.error as Error).message}</Alert>}
         <Typography variant="body2">
           A senha atual deixa de valer agora. O Nexo gera uma senha temporária
           {usuario.email ? ` e a envia para ${usuario.email}` : " (o usuário não tem e-mail: você verá a senha para entregar)"}. No próximo acesso a
@@ -280,7 +335,32 @@ function DialogoNovaSenha({ usuario, aoFechar, aoGerar }: { usuario: UsuarioAdmi
       </DialogContent>
       <DialogActions>
         <Button onClick={aoFechar}>Cancelar</Button>
-        <Button variant="contained" onClick={() => gerar.mutate()} disabled={gerar.isPending}>Gerar nova senha</Button>
+        {linkDisponivel && usuario.email && (
+          <Button onClick={() => link.mutate()} disabled={link.isPending || gerar.isPending}>Enviar link para criar senha</Button>
+        )}
+        <Button variant="contained" onClick={() => gerar.mutate()} disabled={gerar.isPending || link.isPending}>Gerar nova senha</Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+/** Confirmação do link enviado (ADR-027): não há senha para mostrar. */
+function DialogoLinkEnviado({ link, aoFechar }: { link: LinkEnviado; aoFechar: () => void }) {
+  return (
+    <Dialog open onClose={aoFechar} fullWidth maxWidth="xs">
+      <DialogTitle>Link enviado</DialogTitle>
+      <DialogContent sx={{ display: "grid", gap: 2 }}>
+        {link.enviado_por_email ? (
+          <Alert severity="success">
+            Enviamos para {link.destino_email} um link para criar a senha
+            {link.expira_em ? `, válido até ${dataHora(link.expira_em)}` : ""}. O link funciona uma vez só.
+          </Alert>
+        ) : (
+          <Alert severity="warning">{link.aviso || "O e-mail não foi enviado."}</Alert>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button variant="contained" onClick={aoFechar}>Concluir</Button>
       </DialogActions>
     </Dialog>
   );

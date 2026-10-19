@@ -311,6 +311,8 @@ NEXO_RECUPERACAO = {
     "ENVIO_EM_SEGUNDO_PLANO": env.bool("NEXO_RECUPERACAO_SEGUNDO_PLANO", default=True),
 }
 PASSWORD_RESET_TIMEOUT = NEXO_RECUPERACAO["MINUTOS"] * 60
+# Link para a pessoa criar a própria senha no cadastro (ADR-027), em horas.
+NEXO_ATIVACAO_HORAS = env.int("NEXO_ATIVACAO_HORAS", default=72)
 NEXO_CREDENCIAIS = {
     # Endereço do Nexo que vai no e-mail (ex.: https://nexo.exemplo). Vazio = endereço da própria requisição.
     "URL_PUBLICA": env("NEXO_URL_PUBLICA", default=""),
