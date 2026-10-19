@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 api = [
     path("", include("apps.contas.urls")),
@@ -15,6 +16,9 @@ api = [
     path("", include("apps.notificacoes.urls")),
     path("", include("apps.comum.urls")),
     path("", include("apps.manutencao.urls")),
+    # Especificação OpenAPI e documentação navegável (ADR-026)
+    path("esquema/", SpectacularAPIView.as_view(), name="esquema"),
+    path("documentacao/", SpectacularSwaggerView.as_view(url_name="esquema"), name="documentacao"),
 ]
 
 urlpatterns = [

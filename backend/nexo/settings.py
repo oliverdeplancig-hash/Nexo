@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.postgres",
     "rest_framework",
+    "drf_spectacular",  # especificação OpenAPI da API (ADR-026)
+    "drf_spectacular_sidecar",  # telas da documentação servidas pelo próprio Nexo, sem CDN
     "channels",
     # Apps do Nexo
     "apps.comum",
@@ -166,6 +168,7 @@ X_FRAME_OPTIONS = "SAMEORIGIN"  # o visualizador de PDF usa iframe da mesma orig
 # Django REST Framework
 # --------------------------------------------------------------------------
 REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "apps.comum.esquema.EsquemaNexo",
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
     ],
@@ -182,6 +185,28 @@ REST_FRAMEWORK = {
         "recuperacao": env("NEXO_LIMITE_RECUPERACAO", default="5/hour"),
     },
 }
+
+# Especificação OpenAPI (ADR-026): /api/v1/esquema/ e /api/v1/documentacao/, só para quem administra
+# permissões ou consulta a auditoria (a TI). Mostra rotas e formatos, nunca dados.
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Nexo — API",
+    "DESCRIPTION": (
+        "API do repositório institucional e do assistente. Autenticação por sessão; escrita exige o cabeçalho "
+        "X-CSRFToken. O assistente em tempo real usa WebSocket em /ws/chat/ (protocolo em docs/api/README.md)."
+    ),
+    "VERSION": "",  # preenchida abaixo a partir de nexo/versao.py
+    "SCHEMA_PATH_PREFIX": "/api/v1",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SERVE_PERMISSIONS": ["apps.comum.permissoes.PodeVerEspecificacaoApi"],
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SWAGGER_UI_DIST": "SIDECAR",
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "REDOC_DIST": "SIDECAR",
+    "ENUM_NAME_OVERRIDES": {},
+}
+from nexo.versao import VERSAO as _VERSAO  # noqa: E402
+
+SPECTACULAR_SETTINGS["VERSION"] = _VERSAO
 
 # --------------------------------------------------------------------------
 # Channels (WebSocket)

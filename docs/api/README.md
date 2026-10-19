@@ -1,5 +1,8 @@
 # API
 
+Especificação OpenAPI gerada do código: `/api/v1/esquema/` e documentação navegável em `/api/v1/documentacao/`
+(exigem `admin_permissoes` ou `ver_auditoria`, ADR-026). Esta página descreve os campos das rotas em detalhe.
+
 Base: `/api/v1/`. Autenticação por sessão; escrita exige cabeçalho `X-CSRFToken`.
 Paginação: `?page=N&tamanho=M` → `{count, next, previous, results}`.
 

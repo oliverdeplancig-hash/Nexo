@@ -21,3 +21,7 @@ def exige_funcao(*funcoes: str) -> type[BasePermission]:
 
     _TemFuncao.__name__ = "TemFuncao_" + "_".join(funcoes)
     return _TemFuncao
+
+
+# Especificação OpenAPI (ADR-026): só para quem administra permissões ou consulta a auditoria.
+PodeVerEspecificacaoApi = exige_funcao("admin_permissoes", "ver_auditoria")
