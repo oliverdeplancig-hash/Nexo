@@ -15,7 +15,8 @@ export default defineConfig({
   workers: 1, // os testes compartilham o mesmo banco de demonstração
   retries: process.env.CI ? 1 : 0,
   timeout: 45_000,
-  reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
+  // No CI, "github" publica cada falha como anotação no próprio GitHub (o log completo fica fora do alcance local).
+  reporter: process.env.CI ? [["github"], ["list"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL: base,
     locale: "pt-BR",
