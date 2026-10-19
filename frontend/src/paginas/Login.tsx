@@ -1,10 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useLocation } from "react-router-dom";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 import {
   Alert,
   Box,
   Button,
   Divider,
+  Link,
   TextField,
   Typography,
 } from "@mui/material";
@@ -16,6 +17,7 @@ import { cores } from "../tema";
 
 interface Provedores {
   senha_local: boolean;
+  recuperar_senha?: boolean;
   microsoft: { ativo: boolean; rotulo: string };
 }
 
@@ -228,6 +230,11 @@ export default function Login() {
               >
                 {enviando ? "Entrando…" : "Entrar"}
               </Button>
+              {provedores?.recuperar_senha && (
+                <Link component={RouterLink} to="/esqueci-senha" sx={{ display: "block", mt: 2, fontSize: 14, textAlign: "center" }}>
+                  Esqueci minha senha
+                </Link>
+              )}
             </>
           )}
         </Box>

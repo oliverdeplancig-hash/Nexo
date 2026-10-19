@@ -13,6 +13,7 @@ inicial e versões menores podem mudar comportamento.
   trechos quando ela está ocupada, conjunto de conexões do banco, teste de carga (`manage.py teste_carga`),
   processos web extras no Linux e guia de dimensionamento (ADR-020).
 - Modo de ensaio do servidor de rede (`instalar-servidor-windows.cmd teste`) e desinstalação sem perda de dados.
+- "Esqueci minha senha": link de uso único por e-mail, sem revelar quem tem conta (ADR-024).
 - Saúde do sistema: painel em Administração, `manage.py verificar_saude` e avisos diários aos administradores
   sobre cópias atrasadas, disco cheio, processador parado, IA fora do ar e certificado vencendo (ADR-023).
 - Memória da conversa por compactação: o assistente entende perguntas de continuação (ADR-021).

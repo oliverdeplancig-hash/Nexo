@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from . import views
+from . import recuperacao, views
 
 router = DefaultRouter()
 router.register("usuarios", views.UsuarioViewSet, basename="usuario")
@@ -16,6 +16,8 @@ urlpatterns = [
     path("auth/sair/", views.sair, name="auth-sair"),
     path("auth/eu/", views.eu, name="auth-eu"),
     path("auth/trocar-senha/", views.trocar_senha, name="auth-trocar-senha"),
+    path("auth/esqueci-senha/", recuperacao.esqueci_senha, name="auth-esqueci-senha"),
+    path("auth/redefinir-senha/", recuperacao.redefinir_senha, name="auth-redefinir-senha"),
     path("funcoes/", views.funcoes, name="funcoes"),
     *router.urls,
 ]

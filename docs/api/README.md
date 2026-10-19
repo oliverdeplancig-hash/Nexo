@@ -8,10 +8,12 @@ Paginação: `?page=N&tamanho=M` → `{count, next, previous, results}`.
 |---|---|---|
 | GET | `auth/csrf/` | Emite cookie CSRF |
 | POST | `auth/entrar/` | `{usuario, senha}` (403 se `NEXO_LOGIN_LOCAL=false`) |
-| GET | `auth/provedores/` | Formas de entrada ativas: `{senha_local, microsoft: {ativo, rotulo}}` |
+| GET | `auth/provedores/` | Formas de entrada ativas: `{senha_local, recuperar_senha, microsoft: {ativo, rotulo}}` |
 | GET | `auth/microsoft/?destino=/caminho` | Redireciona para o login Microsoft (ADR-010) |
 | GET | `auth/microsoft/retorno/` | Retorno da Microsoft; cria a sessão e redireciona ao destino, ou a `/entrar?erro=<código>` |
 | POST | `auth/trocar-senha/` | `{senha_atual, nova_senha}` — obrigatório no 1º acesso com senha temporária (ADR-018) |
+| POST | `auth/esqueci-senha/` | `{identificacao}` usuário ou e-mail → resposta sempre igual; envia link se a conta puder recuperar (ADR-024) |
+| POST | `auth/redefinir-senha/` | `{u, t}` confere o link · `{u, t, nova_senha}` cria a senha |
 | POST | `auth/sair/` | Encerra a sessão |
 | GET | `auth/eu/` | Usuário, setor, perfis e funções |
 

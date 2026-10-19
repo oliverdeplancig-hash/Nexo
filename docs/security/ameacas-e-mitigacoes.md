@@ -12,4 +12,5 @@
 | Adulteração da auditoria | Cadeia de hashes + gatilho que bloqueia UPDATE/DELETE + verificação |
 | Cache de dados no celular | Service worker sem cache de `/api` |
 | Escalada de privilégio administrativa | Funções críticas restritas e auditadas |
+| Descobrir quem tem conta ou tomar conta pela recuperação de senha | Resposta sempre igual e envio fora da requisição; link de uso único, assinado e curto; limites por endereço e por conta; aviso de alteração por e-mail (ADR-024) |
 | ReDoS em regras | Regex só por gestores, limite de 300 caracteres, validação na gravação |

@@ -18,7 +18,7 @@ from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from apps.auditoria.servico import registrar
 from apps.comum.permissoes import exige_funcao
 
-from . import credenciais, entra
+from . import credenciais, entra, recuperacao
 from .models import FUNCOES_CRITICAS, Funcao, Perfil, Usuario
 from .serializers import (
     MeuUsuarioSerializer,
@@ -76,6 +76,7 @@ def provedores(request):
     return Response(
         {
             "senha_local": settings.NEXO_LOGIN_LOCAL,
+            "recuperar_senha": recuperacao.disponivel(),  # ADR-024
             "microsoft": {"ativo": entra.ativo(), "rotulo": settings.NEXO_ENTRA["ROTULO"]},
         }
     )

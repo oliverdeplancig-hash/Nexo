@@ -77,7 +77,8 @@ export const GRUPOS: Grupo[] = [
           "Para trocar a senha depois, abra Perfil (clique no seu nome) e use “Alterar senha”.",
         ],
         dicas: [
-          "A senha temporária vale por poucos dias. Se ela expirou ou você esqueceu a sua senha, peça uma nova ao administrador do sistema.",
+          "Esqueceu a senha? Na tela de entrada, use “Esqueci minha senha” para receber um link por e-mail (quando o envio de e-mail estiver ativo). O link vale por pouco tempo e uma vez só.",
+          "A senha temporária vale por poucos dias. Se ela expirou, ou se a opção “Esqueci minha senha” não aparecer, peça uma nova ao administrador do sistema.",
           "A nova senha precisa ter pelo menos 10 caracteres, não pode ser só números nem parecida com o seu nome ou usuário.",
           "Ao trocar a senha, outras sessões abertas em outros computadores são encerradas.",
           "Quem entra pela conta Microsoft institucional troca a senha na própria conta Microsoft.",

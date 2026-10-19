@@ -178,6 +178,8 @@ REST_FRAMEWORK = {
         "user": env("NEXO_LIMITE_REQUISICOES", default="600/min"),
         # Tentativas de login por IP. Só os testes de ponta a ponta afrouxam este limite.
         "login": env("NEXO_LIMITE_LOGIN", default="10/min"),
+        # Pedidos de "esqueci minha senha" e uso do link, por IP (ADR-024).
+        "recuperacao": env("NEXO_LIMITE_RECUPERACAO", default="5/hour"),
     },
 }
 
@@ -275,6 +277,13 @@ if NEXO_EMAIL_HOST:
     EMAIL_USE_SSL = env.bool("NEXO_EMAIL_SSL", default=False)
     EMAIL_TIMEOUT = 15
 DEFAULT_FROM_EMAIL = env("NEXO_EMAIL_REMETENTE", default="nexo@localhost")
+
+# Recuperação de senha pelo próprio usuário (ADR-024): link de uso único por e-mail.
+NEXO_RECUPERACAO = {
+    "MINUTOS": env.int("NEXO_RECUPERACAO_MINUTOS", default=60),
+    "ENVIO_EM_SEGUNDO_PLANO": env.bool("NEXO_RECUPERACAO_SEGUNDO_PLANO", default=True),
+}
+PASSWORD_RESET_TIMEOUT = NEXO_RECUPERACAO["MINUTOS"] * 60
 NEXO_CREDENCIAIS = {
     # Endereço do Nexo que vai no e-mail (ex.: https://nexo.exemplo). Vazio = endereço da própria requisição.
     "URL_PUBLICA": env("NEXO_URL_PUBLICA", default=""),

@@ -7,6 +7,7 @@ import { useAutenticacao } from "./contexto/Autenticacao";
 import { ProvedorEventos } from "./contexto/Eventos";
 import Login from "./paginas/Login";
 import PrimeiroAcesso from "./paginas/PrimeiroAcesso";
+import { EsqueciSenha, RedefinirSenha } from "./paginas/RecuperarSenha";
 
 const Dashboard = lazy(() => import("./paginas/Dashboard"));
 const Chat = lazy(() => import("./paginas/Chat"));
@@ -48,6 +49,8 @@ export default function App() {
     return (
       <Routes>
         <Route path="/entrar" element={<Login />} />
+        <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+        <Route path="/redefinir-senha" element={<RedefinirSenha />} />
         <Route path="*" element={<Navigate to="/entrar" replace state={{ de: local.pathname }} />} />
       </Routes>
     );
