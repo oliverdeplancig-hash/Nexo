@@ -13,6 +13,8 @@ inicial e versões menores podem mudar comportamento.
   trechos quando ela está ocupada, conjunto de conexões do banco, teste de carga (`manage.py teste_carga`),
   processos web extras no Linux e guia de dimensionamento (ADR-020).
 - Modo de ensaio do servidor de rede (`instalar-servidor-windows.cmd teste`) e desinstalação sem perda de dados.
+- Avaliação da qualidade das respostas (`manage.py avaliar_respostas`), carga do acervo por pasta
+  (`manage.py importar_pasta`) e conjunto de referência na CI (ADR-025).
 - "Esqueci minha senha": link de uso único por e-mail, sem revelar quem tem conta (ADR-024).
 - Saúde do sistema: painel em Administração, `manage.py verificar_saude` e avisos diários aos administradores
   sobre cópias atrasadas, disco cheio, processador parado, IA fora do ar e certificado vencendo (ADR-023).
@@ -21,6 +23,9 @@ inicial e versões menores podem mudar comportamento.
   verificações antes do commit, atualização automática de dependências e cobertura mínima na CI (ADR-022).
 
 ### Corrigido
+- O assistente respondia perguntas fora do acervo com trechos sem relação quando havia só uma palavra
+  genérica em comum; agora exige cobertura mínima dos termos da pergunta (ADR-025).
+- Palavras juntas no texto extraído de alguns PDFs ("POLÍCIAMILITARDABAHIA"): o texto passa a vir do pdfium.
 - Etapas do assistente de todas as conversas abertas rodavam em fila numa única linha de execução.
 - Pergunta esperando a IA segurava uma conexão do banco, deixando telas e motor lentos no pico.
 - O nginx não passava o IP real ao daphne: auditoria e limite de login usariam o IP do proxy.

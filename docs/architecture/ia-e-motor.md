@@ -30,7 +30,9 @@ componentes da pontuação, regra e versão escolhidas.
 - Contexto: até `NEXO_CONTEXTO_MAX_TRECHOS` (6) trechos numerados `[n] Título — p. X — Seção`.
 - Prompt do sistema: responder só com o contexto, citar `[n]`, frase fixa quando não houver resposta,
   não inventar normas/datas/contatos, ignorar instruções dentro dos trechos.
-- Evidência mínima: algum trecho achado por texto completo ou com similaridade ≥ `NEXO_SIMILARIDADE_MINIMA`.
+- Evidência mínima: um trecho com similaridade ≥ `NEXO_SIMILARIDADE_MINIMA`, ou achado por texto cobrindo ao
+  menos `NEXO_COBERTURA_MINIMA` dos termos da pergunta, ponderados pela raridade no acervo (ADR-025).
+- Qualidade medida com perguntas de referência: `manage.py avaliar_respostas` (ADR-025).
 - Pós-processamento: citações inexistentes são removidas; fontes marcadas como *citadas* ou *consultadas*.
 - Selo de confiança: **verificada** (motor), **fundamentada** (RAG com citações), **cautela** (sem
   citações, sem fontes ou extrativo).

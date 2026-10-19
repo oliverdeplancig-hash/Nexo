@@ -94,7 +94,34 @@ def _decodificar(conteudo: bytes) -> str:
     raise FalhaExtracao("Codificação de texto não reconhecida.")
 
 
-def _pdf(conteudo: bytes) -> list[Bloco]:
+def _textos_pdfium(conteudo: bytes) -> list[str] | None:
+    """Texto de cada página pelo pdfium, que preserva os espaços entre palavras em PDFs onde o pypdf os perde
+    ("POLÍCIAMILITARDABAHIA"), o que prejudica a busca (ADR-025). None se o pdfium não abrir o arquivo."""
+    try:
+        import pypdfium2 as pdfium
+
+        documento = pdfium.PdfDocument(conteudo)
+    except Exception:
+        return None
+    try:
+        textos = []
+        for indice in range(len(documento)):
+            pagina = documento[indice]
+            pagina_texto = pagina.get_textpage()
+            try:
+                bruto = pagina_texto.get_text_range()
+            finally:
+                pagina_texto.close()
+                pagina.close()
+            textos.append(bruto.replace("\r\n", "\n").replace("\r", "\n").replace("\ufffe", "-"))
+        return textos
+    except Exception:
+        return None
+    finally:
+        documento.close()
+
+
+def _textos_pypdf(conteudo: bytes) -> list[str]:
     from pypdf import PdfReader
 
     leitor = PdfReader(io.BytesIO(conteudo))
@@ -103,11 +130,18 @@ def _pdf(conteudo: bytes) -> list[Bloco]:
             leitor.decrypt("")
         except Exception as erro:
             raise FalhaExtracao("O PDF está protegido por senha.") from erro
+    return [pagina.extract_text() or "" for pagina in leitor.pages]
+
+
+def _pdf(conteudo: bytes) -> list[Bloco]:
+    textos = _textos_pdfium(conteudo)
+    if textos is None:
+        textos = _textos_pypdf(conteudo)
     blocos: list[Bloco] = []
     secao = ""
     ocr = obter_ocr()
-    for numero, pagina in enumerate(leitor.pages, start=1):
-        texto = pagina.extract_text() or ""
+    for numero, texto in enumerate(textos, start=1):
+        texto = texto or ""
         por_ocr = False
         if len("".join(texto.split())) < MINIMO_CARACTERES_PAGINA and ocr.disponivel():
             texto = ocr.reconhecer(renderizar_pagina_pdf(conteudo, numero - 1))

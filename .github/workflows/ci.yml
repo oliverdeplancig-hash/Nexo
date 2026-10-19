@@ -53,6 +53,18 @@ jobs:
           { echo "### Cobertura do backend"; coverage report --format=markdown; } >> "$GITHUB_STEP_SUMMARY"
         env:
           NEXO_DATABASE_URL: postgres://nexo:nexo@localhost:5432/nexo
+      - name: Avaliação das respostas (documentos fictícios, ADR-025)
+        run: |
+          python manage.py migrate --noinput -v0
+          python manage.py carregar_demo
+          python manage.py avaliar_respostas avaliacao/exemplo-demonstracao.json --minimo 0.8 --saida /tmp/avaliacao
+          { echo "### Avaliação das respostas"; sed -n '/| Indicador/,/## Casos/p' /tmp/avaliacao/*.md; } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          NEXO_DATABASE_URL: postgres://nexo:nexo@localhost:5432/nexo
+          NEXO_DEBUG: "true"
+          NEXO_IA_PROVEDOR: falso
+          NEXO_PROCESSAR_IMEDIATAMENTE: "true"
+          NEXO_OCR_MOTOR: desligado
 
   frontend:
     name: Frontend (tipos + build)

@@ -21,6 +21,21 @@ Requer PostgreSQL com pgvector (o banco de teste é criado automaticamente). 125
 
 Frontend: `npm run build` (checagem de tipos).
 
+## Avaliação da qualidade das respostas (ADR-025)
+
+```bash
+cd backend
+python manage.py avaliar_respostas avaliacao/exemplo-demonstracao.json            # fictício, roda na CI
+python manage.py importar_pasta "<pasta com os documentos>" --usuario <login> --setor <sigla> --classificacao geral
+python manage.py avaliar_respostas avaliacao/local/<conjunto>.json --saida avaliacao/local/resultados
+```
+
+Mede, para cada pergunta de referência: fonte esperada citada (e posição), conteúdo esperado nos trechos
+encontrados e na resposta, recusa correta para perguntas fora do acervo, origem e tempo. Formato do
+conjunto em `apps/conversas/avaliacao.py`. Conjuntos e relatórios com documentos reais ficam em
+`backend/avaliacao/local/` (fora do Git). Para números de resposta válidos, rode com o Ollama
+(`NEXO_IA_PROVEDOR=ollama`): com o provedor de teste a resposta só repete os trechos.
+
 ## Ponta a ponta e acessibilidade (ADR-017)
 
 ```bash

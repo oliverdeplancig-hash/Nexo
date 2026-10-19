@@ -104,10 +104,12 @@ def renderizar_pagina_pdf(conteudo: bytes, indice: int):
     import pypdfium2 as pdfium
 
     documento = pdfium.PdfDocument(conteudo)
+    pagina = documento[indice]
     try:
         escala = settings.NEXO_OCR["DPI"] / 72
-        return documento[indice].render(scale=escala, grayscale=True).to_pil()
+        return pagina.render(scale=escala, grayscale=True).to_pil()
     finally:
+        pagina.close()  # fecha a página antes do documento (evita aviso do pdfium ao encerrar)
         documento.close()
 
 

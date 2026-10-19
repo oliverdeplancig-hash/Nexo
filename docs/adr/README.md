@@ -28,3 +28,4 @@ Formato `ADR-NNN-titulo.md`. Status inicial **Proposta**; ADR aceita não se edi
 | [ADR-022](ADR-022-governanca-do-repositorio.md) | Governança do repositório: versões, contribuição e verificações automáticas | Proposta | 2026-10-19 |
 | [ADR-023](ADR-023-saude-do-sistema.md) | Saúde do sistema: painel, verificação por comando e avisos aos administradores | Proposta | 2026-10-19 |
 | [ADR-024](ADR-024-recuperacao-de-senha.md) | Recuperação de senha pelo próprio usuário com link de uso único | Proposta | 2026-10-19 |
+| [ADR-025](ADR-025-avaliacao-das-respostas.md) | Avaliação contínua da qualidade das respostas com perguntas de referência | Proposta | 2026-10-19 |

@@ -1,0 +1,56 @@
+{
+  "nome": "Demonstração (documentos fictícios)",
+  "usuario": "servidor.demo",
+  "descricao": "Conjunto de referência sobre os documentos fictícios de demonstração. Roda na CI (ADR-025). Os conjuntos com documentos reais da instituição ficam em avaliacao/local/, fora do Git.",
+  "casos": [
+    {
+      "id": "ferias-regra",
+      "tema": "Pessoal",
+      "pergunta": "Como solicito férias?",
+      "fontes": ["solicitação de férias"],
+      "contem": ["30 dias"],
+      "origem": "deterministico"
+    },
+    {
+      "id": "ferias-alteracao",
+      "tema": "Pessoal",
+      "pergunta": "Qual a antecedência para alterar o período de férias já marcado?",
+      "fontes": ["solicitação de férias"],
+      "contem": ["15 dias"]
+    },
+    {
+      "id": "protocolo-abertura",
+      "tema": "Protocolo",
+      "pergunta": "O que preciso fazer para abrir um processo administrativo no protocolo?",
+      "fontes": ["protocolo de documentos"],
+      "contem": ["requerimento"]
+    },
+    {
+      "id": "protocolo-acesso-restrito",
+      "tema": "Protocolo",
+      "pergunta": "Como pedir acesso a um documento restrito?",
+      "fontes": ["protocolo de documentos"],
+      "contem": ["justificativa"]
+    },
+    {
+      "id": "permissao-norma-ti",
+      "tema": "Permissões",
+      "pergunta": "Quantos caracteres deve ter a senha de rede?",
+      "sem_resposta": true,
+      "nao_contem": ["12 caracteres"]
+    },
+    {
+      "id": "permissao-contingencia",
+      "tema": "Permissões",
+      "pergunta": "Quando o plano de contingência de sistemas é acionado?",
+      "sem_resposta": true,
+      "nao_contem": ["4 horas"]
+    },
+    {
+      "id": "fora-do-acervo",
+      "tema": "Fora do acervo",
+      "pergunta": "Qual o cardápio do refeitório nesta semana?",
+      "sem_resposta": true
+    }
+  ]
+}

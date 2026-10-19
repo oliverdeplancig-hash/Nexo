@@ -173,7 +173,7 @@ def preparar(usuario, conversa: Conversa, pergunta: str) -> Plano:
     rastro["busca"] = diagnostico
     rastro["etapas"].append(f"busca:{len(resultados)}")
 
-    if not resultados or not evidencia_suficiente(resultados):
+    if not resultados or not evidencia_suficiente(resultados, consulta):
         rastro["etapas"].append("sem_evidencia")
         setores = _setores_dados(consulta, usuario)
         conteudo = "Não encontrei fontes suficientes nos documentos disponíveis para o seu perfil para responder com segurança."

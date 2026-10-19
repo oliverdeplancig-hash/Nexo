@@ -214,6 +214,8 @@ NEXO_IA = {
     "TEMPERATURA": env.float("NEXO_TEMPERATURA", default=0.1),
     "CONTEXTO_MAX_TRECHOS": env.int("NEXO_CONTEXTO_MAX_TRECHOS", default=6),
     "SIMILARIDADE_MINIMA": env.float("NEXO_SIMILARIDADE_MINIMA", default=0.45),
+    # Fração mínima dos termos da pergunta presentes num trecho encontrado por texto (ADR-025).
+    "COBERTURA_MINIMA": env.float("NEXO_COBERTURA_MINIMA", default=0.5),
     "TIMEOUT_SEGUNDOS": env.float("NEXO_IA_TIMEOUT", default=120.0),
     # Fila de geração (ADR-020): gerações simultâneas por processo web, tamanho da fila e espera máxima.
     "CONCORRENCIA": env.int("NEXO_IA_CONCORRENCIA", default=2),

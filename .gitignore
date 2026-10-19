@@ -39,3 +39,6 @@ backend/.certificados/
 *usuarios*.xlsx
 .coverage
 htmlcov/
+
+# Conjuntos de avaliação e relatórios com documentos reais da instituição (ADR-025): nunca no Git
+backend/avaliacao/local/

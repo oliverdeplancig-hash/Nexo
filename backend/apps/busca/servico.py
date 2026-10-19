@@ -7,6 +7,7 @@ com desempate pelo id do trecho (resultado estável para a mesma entrada).
 
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass, field
 
@@ -187,14 +188,63 @@ def _anexar_destaques(resultados: list[Resultado], tsquery: SearchQuery | None) 
         r.destaque = destaques.get(r.trecho.id) or r.trecho.texto[:300]
 
 
-def evidencia_suficiente(resultados: list[Resultado]) -> bool:
+# Radicais que só emolduram a pergunta ("o que significa", "quantos", "como é feito") e não dizem o assunto.
+_MOLDURA_DE_PERGUNTA = frozenset({"signific", "significad", "quant", "feit", "dev", "deve", "exist", "diz"})
+
+
+def pesos_dos_termos(consulta: str) -> dict[str, float]:
+    """Peso de cada termo da pergunta pela raridade no acervo (como o IDF): "PMBA", que está em quase todo
+    trecho, pesa pouco; "concurso", que não aparece em nenhum, pesa muito (ADR-025)."""
+    from django.core.cache import cache
+
+    termos = [t for t in texto.tokens(consulta) if t not in _MOLDURA_DE_PERGUNTA][:12]
+    total = Trecho.objects.count()
+    campo = "texto__unaccent__icontains" if tem_unaccent() else "texto__icontains"
+    pesos: dict[str, float] = {}
+    for termo in termos:
+        chave = f"nexo:busca:df:{total}:{termo}"
+        frequencia = cache.get(chave)
+        if frequencia is None:
+            frequencia = Trecho.objects.filter(**{campo: termo}).count()
+            cache.set(chave, frequencia, 3600)
+        pesos[termo] = math.log((total + 1) / (frequencia + 1)) + 0.1
+    return pesos
+
+
+def cobertura_da_consulta(pesos: dict[str, float], trecho_texto: str) -> float:
+    """Fração (ponderada pela raridade) dos termos da pergunta que aparecem no trecho."""
+    soma = sum(pesos.values())
+    if not soma:
+        return 0.0
+    presentes = set(texto.tokens(trecho_texto))
+    return sum(peso for termo, peso in pesos.items() if termo in presentes) / soma
+
+
+def evidencia_suficiente(resultados: list[Resultado], consulta: str | None = None) -> bool:
     """Há base documental mínima para a IA responder?
 
-    Basta um trecho encontrado por texto completo ou um trecho com similaridade
-    semântica acima do mínimo configurado.
+    - um trecho com similaridade semântica acima de NEXO_SIMILARIDADE_MINIMA; ou
+    - um trecho encontrado por texto que cubra pelo menos NEXO_COBERTURA_MINIMA dos termos da pergunta.
+
+    A cobertura (ADR-025) evita responder com trechos que só têm em comum palavras genéricas ("deve", "prazo"):
+    nesse caso a resposta correta é "não encontrei fontes suficientes".
     """
     minimo = settings.NEXO_IA["SIMILARIDADE_MINIMA"]
-    return any("texto" in r.origens or (r.similaridade is not None and r.similaridade >= minimo) for r in resultados)
+    if any(r.similaridade is not None and r.similaridade >= minimo for r in resultados):
+        return True
+    por_texto = [r for r in resultados if "texto" in r.origens]
+    if consulta is None:
+        return bool(por_texto)
+    if not por_texto:
+        return False
+    cobertura_minima = settings.NEXO_IA["COBERTURA_MINIMA"]
+    pesos = pesos_dos_termos(consulta)
+    # O título do documento conta junto com o trecho ("cadeia de valor" pode estar só no título).
+    return any(
+        cobertura_da_consulta(pesos, f"{r.trecho.documento.titulo} {r.trecho.secao} {r.trecho.texto}")
+        >= cobertura_minima
+        for r in por_texto[:10]
+    )
 
 
 def agrupar_por_documento(resultados: list[Resultado]) -> list[dict]:
