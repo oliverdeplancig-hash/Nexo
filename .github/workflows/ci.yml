@@ -109,7 +109,7 @@ jobs:
           E2E_DATABASE_URL: postgres://nexo:nexo@localhost:5432/nexo_e2e
       - name: Relatório (em caso de falha)
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: relatorio-playwright
           path: frontend/playwright-report
