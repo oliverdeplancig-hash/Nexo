@@ -15,6 +15,7 @@ urlpatterns = [
     path("auth/microsoft/retorno/", views.microsoft_retorno, name="auth-microsoft-retorno"),
     path("auth/sair/", views.sair, name="auth-sair"),
     path("auth/eu/", views.eu, name="auth-eu"),
+    path("auth/trocar-senha/", views.trocar_senha, name="auth-trocar-senha"),
     path("funcoes/", views.funcoes, name="funcoes"),
     *router.urls,
 ]

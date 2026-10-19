@@ -57,6 +57,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.contas.credenciais.ExigeTrocaDeSenha",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -214,6 +215,25 @@ NEXO_ENTRA = {
 # Login por usuário e senha do próprio Nexo (contas locais). Pode ser desligado quando o login institucional
 # estiver em uso; administradores de suporte continuam no admin do Django, se habilitado.
 NEXO_LOGIN_LOCAL = env.bool("NEXO_LOGIN_LOCAL", default=True)
+
+# E-mail e credenciais (ADR-018). Sem NEXO_EMAIL_HOST, nada é enviado: a senha gerada aparece só na tela
+# de quem cadastrou, para ser entregue por outro meio.
+NEXO_EMAIL_HOST = env("NEXO_EMAIL_HOST", default="")
+if NEXO_EMAIL_HOST:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = NEXO_EMAIL_HOST
+    EMAIL_PORT = env.int("NEXO_EMAIL_PORTA", default=587)
+    EMAIL_HOST_USER = env("NEXO_EMAIL_USUARIO", default="")
+    EMAIL_HOST_PASSWORD = env("NEXO_EMAIL_SENHA", default="")
+    EMAIL_USE_TLS = env.bool("NEXO_EMAIL_TLS", default=True)
+    EMAIL_USE_SSL = env.bool("NEXO_EMAIL_SSL", default=False)
+    EMAIL_TIMEOUT = 15
+DEFAULT_FROM_EMAIL = env("NEXO_EMAIL_REMETENTE", default="nexo@localhost")
+NEXO_CREDENCIAIS = {
+    # Endereço do Nexo que vai no e-mail (ex.: https://nexo.exemplo). Vazio = endereço da própria requisição.
+    "URL_PUBLICA": env("NEXO_URL_PUBLICA", default=""),
+    "VALIDADE_HORAS": env.int("NEXO_SENHA_TEMPORARIA_HORAS", default=72),
+}
 
 # Revisão periódica de documentos (ADR-015)
 NEXO_REVISAO = {

@@ -9,6 +9,7 @@ interface ValorAutenticacao {
   carregando: boolean;
   entrar: (usuario: string, senha: string) => Promise<void>;
   sair: () => Promise<void>;
+  atualizarUsuario: (u: Usuario) => void;
   tem: (funcao: string) => boolean;
 }
 
@@ -47,7 +48,7 @@ export function ProvedorAutenticacao({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   const valor = useMemo<ValorAutenticacao>(
-    () => ({ usuario, carregando, entrar, sair, tem: (f) => !!usuario?.funcoes.includes(f) }),
+    () => ({ usuario, carregando, entrar, sair, atualizarUsuario: setUsuario, tem: (f) => !!usuario?.funcoes.includes(f) }),
     [usuario, carregando, entrar, sair],
   );
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;

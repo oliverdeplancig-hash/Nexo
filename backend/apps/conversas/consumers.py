@@ -37,6 +37,9 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         if not usuario or not usuario.is_authenticated or not usuario.is_active:
             await self.close(code=4401)
             return
+        if getattr(usuario, "senha_temporaria", False):  # precisa criar a própria senha antes (ADR-018)
+            await self.close(code=4403)
+            return
         self.tarefa: asyncio.Task | None = None
         self._cancelar = False
         await self.accept()

@@ -17,6 +17,17 @@ export interface Usuario {
   setor: { id: number; nome: string; sigla: string } | null;
   perfis: { codigo: string; nome: string }[];
   funcoes: string[];
+  trocar_senha: boolean;
+  pode_alterar_senha: boolean;
+}
+
+export interface Credenciais {
+  usuario: string;
+  senha_temporaria: string;
+  expira_em: string | null;
+  enviado_por_email: boolean;
+  destino_email: string;
+  aviso: string;
 }
 
 export interface SetorResumo {
@@ -259,6 +270,9 @@ export interface UsuarioAdmin {
   is_active: boolean;
   last_login: string | null;
   date_joined: string;
+  senha_temporaria?: boolean;
+  senha_temporaria_expira_em?: string | null;
+  tem_login_microsoft?: boolean;
 }
 
 export interface Autorizacao {

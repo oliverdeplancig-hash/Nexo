@@ -6,6 +6,7 @@ import Layout from "./componentes/Layout";
 import { useAutenticacao } from "./contexto/Autenticacao";
 import { ProvedorEventos } from "./contexto/Eventos";
 import Login from "./paginas/Login";
+import PrimeiroAcesso from "./paginas/PrimeiroAcesso";
 
 const Dashboard = lazy(() => import("./paginas/Dashboard"));
 const Chat = lazy(() => import("./paginas/Chat"));
@@ -51,6 +52,9 @@ export default function App() {
       </Routes>
     );
   }
+
+  // Senha temporária (ADR-018): nada além de criar a senha até que ela seja trocada.
+  if (usuario.trocar_senha) return <PrimeiroAcesso />;
 
   return (
     <ProvedorEventos>

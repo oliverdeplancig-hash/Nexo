@@ -30,10 +30,10 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { Check, Minus, Pencil, Plus, Search, ShieldAlert, Trash2 } from "lucide-react";
+import { Check, KeyRound, Minus, Pencil, Plus, Search, ShieldAlert, Trash2 } from "lucide-react";
 
 import { api } from "../api/cliente";
-import type { Autorizacao, DocumentoLista, Paginado, Perfil, Setor, UsuarioAdmin } from "../api/tipos";
+import type { Autorizacao, Credenciais, DocumentoLista, Paginado, Perfil, Setor, UsuarioAdmin } from "../api/tipos";
 import { Cabecalho, Erro, Pagina } from "../componentes/comuns";
 import { useAutenticacao } from "../contexto/Autenticacao";
 import { cores } from "../tema";
@@ -69,6 +69,8 @@ export default function Administracao() {
 function Usuarios() {
   const [busca, setBusca] = useState("");
   const [edicao, setEdicao] = useState<Partial<UsuarioAdmin> | null>(null);
+  const [credenciais, setCredenciais] = useState<Credenciais | null>(null);
+  const [novaSenhaPara, setNovaSenhaPara] = useState<UsuarioAdmin | null>(null);
   const usuarios = useQuery({ queryKey: ["usuarios", busca], queryFn: () => api<Paginado<UsuarioAdmin>>(`/usuarios/?q=${encodeURIComponent(busca)}&tamanho=50`) });
   const setores = useQuery({ queryKey: ["setores", "todos"], queryFn: () => api<Paginado<Setor>>("/setores/?tamanho=100") });
   const perfis = useQuery({ queryKey: ["perfis"], queryFn: () => api<Paginado<Perfil>>("/perfis/") });
@@ -104,23 +106,54 @@ function Usuarios() {
                   <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>{u.perfis.map((p) => <Chip key={p} size="small" label={nomePerfil(p)} />)}</Box>
                 </TableCell>
                 <TableCell>
-                  <Chip size="small" label={u.is_active ? "Ativo" : "Desativado"} sx={{ bgcolor: u.is_active ? cores.verificado.fundo : cores.bordaSutil, color: u.is_active ? cores.verificado.texto : cores.textoSecundario }} />
+                  <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                    <Chip size="small" label={u.is_active ? "Ativo" : "Desativado"} sx={{ bgcolor: u.is_active ? cores.verificado.fundo : cores.bordaSutil, color: u.is_active ? cores.verificado.texto : cores.textoSecundario }} />
+                    {u.senha_temporaria && <Chip size="small" variant="outlined" label="Aguardando 1º acesso" title="Ainda não criou a própria senha" />}
+                  </Box>
                 </TableCell>
                 <TableCell>{dataHora(u.last_login)}</TableCell>
                 <TableCell align="right">
                   <IconButton size="small" onClick={() => setEdicao(u)} aria-label={`Editar ${u.username}`}><Pencil size={16} /></IconButton>
+                  {!u.tem_login_microsoft && (
+                    <IconButton size="small" onClick={() => setNovaSenhaPara(u)} aria-label={`Gerar nova senha para ${u.username}`} title="Gerar nova senha">
+                      <KeyRound size={16} />
+                    </IconButton>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
-      {edicao && <DialogoUsuario usuario={edicao} setores={setores.data?.results ?? []} perfis={perfis.data?.results ?? []} aoFechar={() => setEdicao(null)} />}
+      {edicao && (
+        <DialogoUsuario
+          usuario={edicao}
+          setores={setores.data?.results ?? []}
+          perfis={perfis.data?.results ?? []}
+          aoFechar={() => setEdicao(null)}
+          aoGerarCredenciais={setCredenciais}
+        />
+      )}
+      {novaSenhaPara && <DialogoNovaSenha usuario={novaSenhaPara} aoFechar={() => setNovaSenhaPara(null)} aoGerar={setCredenciais} />}
+      {credenciais && <DialogoCredenciais credenciais={credenciais} aoFechar={() => setCredenciais(null)} />}
     </>
   );
 }
 
-function DialogoUsuario({ usuario, setores, perfis, aoFechar }: { usuario: Partial<UsuarioAdmin>; setores: Setor[]; perfis: Perfil[]; aoFechar: () => void }) {
+function DialogoUsuario({
+  usuario,
+  setores,
+  perfis,
+  aoFechar,
+  aoGerarCredenciais,
+}: {
+  usuario: Partial<UsuarioAdmin>;
+  setores: Setor[];
+  perfis: Perfil[];
+  aoFechar: () => void;
+  aoGerarCredenciais: (c: Credenciais) => void;
+}) {
+  const [modoSenha, setModoSenha] = useState<"gerar" | "manual">("gerar");
   const queryClient = useQueryClient();
   const [f, setF] = useState({
     username: usuario.username ?? "",
@@ -135,11 +168,19 @@ function DialogoUsuario({ usuario, setores, perfis, aoFechar }: { usuario: Parti
   const salvar = useMutation({
     mutationFn: () => {
       const corpo: Record<string, unknown> = { ...f, setor: f.setor ? Number(f.setor) : null, perfis: f.perfis.map(Number) };
-      if (!f.senha) delete corpo.senha;
-      return api(usuario.id ? `/usuarios/${usuario.id}/` : "/usuarios/", { method: usuario.id ? "PATCH" : "POST", json: corpo });
+      if (!usuario.id && modoSenha === "gerar") {
+        corpo.gerar_senha = true;
+        delete corpo.senha;
+      }
+      if (!corpo.senha) delete corpo.senha;
+      return api<UsuarioAdmin & { credenciais?: Credenciais }>(usuario.id ? `/usuarios/${usuario.id}/` : "/usuarios/", {
+        method: usuario.id ? "PATCH" : "POST",
+        json: corpo,
+      });
     },
-    onSuccess: () => {
+    onSuccess: (r) => {
       queryClient.invalidateQueries({ queryKey: ["usuarios"] });
+      if (r.credenciais) aoGerarCredenciais(r.credenciais);
       aoFechar();
     },
   });
@@ -172,12 +213,109 @@ function DialogoUsuario({ usuario, setores, perfis, aoFechar }: { usuario: Parti
             </MenuItem>
           ))}
         </TextField>
-        <TextField label={usuario.id ? "Nova senha (opcional)" : "Senha inicial"} type="password" value={f.senha} onChange={(e) => setF({ ...f, senha: e.target.value })} helperText="Mínimo de 10 caracteres. Em integração com diretório institucional (LDAP), deixe em branco." autoComplete="new-password" />
+        {!usuario.id && (
+          <TextField select id="usuario-modo-senha" label="Senha de acesso" value={modoSenha} onChange={(e) => setModoSenha(e.target.value as "gerar" | "manual")}>
+            <MenuItem value="gerar">Gerar senha e enviar por e-mail</MenuItem>
+            <MenuItem value="manual">Definir a senha inicial</MenuItem>
+          </TextField>
+        )}
+        {!usuario.id && modoSenha === "gerar" ? (
+          <Alert severity="info" variant="outlined">
+            O Nexo gera uma senha temporária e envia usuário, senha e endereço para o e-mail acima. No primeiro acesso a pessoa
+            cria a própria senha. Se o e-mail não puder ser enviado, a senha aparece para você entregar.
+          </Alert>
+        ) : (
+          <TextField
+            label={usuario.id ? "Nova senha provisória (opcional)" : "Senha inicial"}
+            type="password"
+            value={f.senha}
+            onChange={(e) => setF({ ...f, senha: e.target.value })}
+            helperText="Mínimo de 10 caracteres. A pessoa cria a própria senha no próximo acesso."
+            autoComplete="new-password"
+          />
+        )}
         <FormControlLabel control={<Switch checked={f.is_active} onChange={(e) => setF({ ...f, is_active: e.target.checked })} />} label="Conta ativa" />
       </DialogContent>
       <DialogActions>
         <Button onClick={aoFechar}>Cancelar</Button>
-        <Button variant="contained" onClick={() => salvar.mutate()} disabled={!f.username || salvar.isPending}>Salvar usuário</Button>
+        <Button
+          variant="contained"
+          onClick={() => salvar.mutate()}
+          disabled={!f.username || salvar.isPending || (!usuario.id && modoSenha === "gerar" && !f.email.trim()) || (!usuario.id && modoSenha === "manual" && !f.senha)}
+        >
+          {!usuario.id && modoSenha === "gerar" ? "Salvar e enviar acesso" : "Salvar usuário"}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+/** Gera nova senha temporária para quem esqueceu a senha (ADR-018). */
+function DialogoNovaSenha({ usuario, aoFechar, aoGerar }: { usuario: UsuarioAdmin; aoFechar: () => void; aoGerar: (c: Credenciais) => void }) {
+  const queryClient = useQueryClient();
+  const gerar = useMutation({
+    mutationFn: () => api<Credenciais>(`/usuarios/${usuario.id}/gerar-senha/`, { method: "POST" }),
+    onSuccess: (c) => {
+      queryClient.invalidateQueries({ queryKey: ["usuarios"] });
+      aoGerar(c);
+      aoFechar();
+    },
+  });
+  return (
+    <Dialog open onClose={aoFechar} fullWidth maxWidth="xs">
+      <DialogTitle>Gerar nova senha para {usuario.username}?</DialogTitle>
+      <DialogContent>
+        {gerar.isError && <Alert severity="error" sx={{ mb: 2 }}>{(gerar.error as Error).message}</Alert>}
+        <Typography variant="body2">
+          A senha atual deixa de valer agora. O Nexo gera uma senha temporária
+          {usuario.email ? ` e a envia para ${usuario.email}` : " (o usuário não tem e-mail: você verá a senha para entregar)"}. No próximo acesso a
+          pessoa cria a própria senha.
+        </Typography>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={aoFechar}>Cancelar</Button>
+        <Button variant="contained" onClick={() => gerar.mutate()} disabled={gerar.isPending}>Gerar nova senha</Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+/** Mostra a senha gerada UMA vez; ela não pode ser consultada depois. */
+function DialogoCredenciais({ credenciais, aoFechar }: { credenciais: Credenciais; aoFechar: () => void }) {
+  const [copiado, setCopiado] = useState(false);
+  const texto = `Usuário: ${credenciais.usuario}\nSenha temporária: ${credenciais.senha_temporaria}`;
+  return (
+    <Dialog open onClose={aoFechar} fullWidth maxWidth="xs">
+      <DialogTitle>Acesso criado</DialogTitle>
+      <DialogContent sx={{ display: "grid", gap: 2 }}>
+        {credenciais.enviado_por_email ? (
+          <Alert severity="success">Usuário e senha temporária enviados para {credenciais.destino_email}.</Alert>
+        ) : (
+          <Alert severity="warning">{credenciais.aviso || "O e-mail não foi enviado. Entregue a senha por um meio seguro."}</Alert>
+        )}
+        <Box sx={{ p: 2, borderRadius: 2, bgcolor: cores.fundo, border: `1px solid ${cores.borda}`, fontFamily: "\"JetBrains Mono\", monospace", fontSize: 14, display: "grid", gap: 0.5 }}>
+          <span>Usuário: <strong>{credenciais.usuario}</strong></span>
+          <span>Senha temporária: <strong>{credenciais.senha_temporaria}</strong></span>
+        </Box>
+        <Typography variant="body2" color="text.secondary">
+          {credenciais.expira_em ? `A senha vale até ${dataHora(credenciais.expira_em)}. ` : ""}
+          Esta é a única vez que a senha aparece. No primeiro acesso a pessoa cria a própria senha.
+        </Typography>
+      </DialogContent>
+      <DialogActions>
+        <Button
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(texto);
+              setCopiado(true);
+            } catch {
+              setCopiado(false);
+            }
+          }}
+        >
+          {copiado ? "Copiado" : "Copiar"}
+        </Button>
+        <Button variant="contained" onClick={aoFechar}>Concluir</Button>
       </DialogActions>
     </Dialog>
   );

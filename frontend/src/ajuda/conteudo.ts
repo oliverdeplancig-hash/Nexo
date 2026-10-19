@@ -65,6 +65,24 @@ export const GRUPOS: Grupo[] = [
           "Para sair, use o ícone ao lado do seu nome.",
         ],
       },
+      {
+        id: "senha",
+        titulo: "Primeiro acesso e senha",
+        telas: ["/perfil"],
+        resumo:
+          "Quando o seu acesso é criado, você recebe por e-mail (ou do administrador) o usuário e uma senha temporária. No primeiro acesso o Nexo pede que você crie a sua própria senha.",
+        passos: [
+          "Entre com o usuário e a senha temporária.",
+          "Na tela “Crie a sua senha”, digite a senha temporária, a nova senha e repita a nova senha.",
+          "Para trocar a senha depois, abra Perfil (clique no seu nome) e use “Alterar senha”.",
+        ],
+        dicas: [
+          "A senha temporária vale por poucos dias. Se ela expirou ou você esqueceu a sua senha, peça uma nova ao administrador do sistema.",
+          "A nova senha precisa ter pelo menos 10 caracteres, não pode ser só números nem parecida com o seu nome ou usuário.",
+          "Ao trocar a senha, outras sessões abertas em outros computadores são encerradas.",
+          "Quem entra pela conta Microsoft institucional troca a senha na própria conta Microsoft.",
+        ],
+      },
     ],
   },
   {
@@ -341,8 +359,15 @@ export const GRUPOS: Grupo[] = [
         funcao: "admin_usuarios",
         telas: ["/administracao"],
         resumo:
-          "Em Administração → Usuários você cadastra servidores, define setor e perfis, e ativa ou desativa contas.",
+          "Em Administração → Usuários você cadastra servidores, define setor e perfis, e ativa ou desativa contas. No cadastro, o Nexo pode gerar a senha e enviar o acesso por e-mail.",
+        passos: [
+          "Clique em “Cadastrar usuário” e preencha usuário, nome, e-mail institucional, setor e perfis.",
+          "Em “Senha de acesso”, deixe “Gerar senha e enviar por e-mail” e clique em “Salvar e enviar acesso”.",
+          "Confira a janela “Acesso criado”: ela confirma o envio ou mostra a senha para você entregar, se o e-mail não puder ser enviado. A senha aparece só nesse momento.",
+          "Para quem esqueceu a senha, use o ícone de chave na linha do usuário (“Gerar nova senha”).",
+        ],
         dicas: [
+          "A senha gerada é temporária: vale por poucos dias e, no primeiro acesso, a pessoa cria a própria senha. Até lá, a linha mostra “Aguardando 1º acesso”.",
           "Quem entra pela conta Microsoft institucional pela primeira vez é criado com o perfil Servidor e sem setor: defina o setor para que veja os documentos do próprio setor.",
           "Para bloquear alguém imediatamente, desative o usuário.",
           "Atribuir perfis com funções críticas exige a função de administrar permissões.",

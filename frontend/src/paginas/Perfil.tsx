@@ -1,7 +1,8 @@
 import { Box, Button, Chip, Paper, Typography } from "@mui/material";
 import { LogOut } from "lucide-react";
 
-import { Cabecalho, Pagina, Rotulo, Valor } from "../componentes/comuns";
+import { Cabecalho, Pagina, Rotulo, TituloSecao, Valor } from "../componentes/comuns";
+import TrocarSenha from "../componentes/TrocarSenha";
 import { useAutenticacao } from "../contexto/Autenticacao";
 import { cores } from "../tema";
 
@@ -41,6 +42,16 @@ export default function Perfil() {
         <Typography variant="caption" component="p" sx={{ mt: 3, color: cores.textoSecundario }}>
           Para alterar seus dados, setor ou perfis, procure a administração do sistema.
         </Typography>
+      </Paper>
+      <Paper variant="outlined" component="section" aria-label="Alterar senha" sx={{ p: 3, maxWidth: 640, mt: 3 }}>
+        <TituloSecao>Alterar senha</TituloSecao>
+        {usuario.pode_alterar_senha ? (
+          <TrocarSenha />
+        ) : (
+          <Typography variant="body2" sx={{ color: cores.textoSecundario }}>
+            Você entra com a conta Microsoft institucional. A senha é alterada na própria conta Microsoft.
+          </Typography>
+        )}
       </Paper>
     </Pagina>
   );

@@ -9,7 +9,7 @@ test("tela de entrada", async ({ page }) => {
 
 for (const [usuario, telas] of [
   ["servidor.demo", ["/", "/assistente", "/repositorio", "/busca?q=ferias", "/colecoes", "/setores", "/ajuda", "/documentos/1"]],
-  ["admin.demo", ["/administracao", "/motor", "/motor?aba=lacunas", "/painel-acervo", "/auditoria", "/importacao"]],
+  ["admin.demo", ["/administracao", "/perfil", "/motor", "/motor?aba=lacunas", "/painel-acervo", "/auditoria", "/importacao"]],
 ] as const) {
   test(`telas de ${usuario}`, async ({ page }) => {
     await entrar(page, usuario);

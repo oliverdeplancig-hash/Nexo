@@ -56,6 +56,8 @@ Ou use `scripts/iniciar-local.ps1`.
    existente, mantendo HTTPS na borda; nesse caso sirva `frontend/dist` por um servidor estático
    aprovado pela TI.
 8. Ollama no próprio servidor ou em máquina com GPU da rede interna (`NEXO_OLLAMA_URL`).
+9. E-mail pelo SMTP da instituição (`NEXO_EMAIL_HOST` e demais variáveis no `.env.example`) e
+   `NEXO_URL_PUBLICA`, para o envio automático de usuário e senha temporária no cadastro (ADR-018).
 
 ## Cópia de segurança
 Cópia diária do banco e dos arquivos num único pacote cifrado, com verificação e restauração por comando —

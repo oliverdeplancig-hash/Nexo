@@ -55,6 +55,14 @@ class Usuario(AbstractUser):
         unique=True,
         help_text="Identificador da conta institucional (Microsoft Entra ID: oid). Preenchido no primeiro login.",
     )
+    # Credenciais geradas pelo Nexo (ADR-018): a senha temporária vale até expirar e obriga a troca no 1º acesso.
+    senha_temporaria = models.BooleanField(default=False)
+    senha_temporaria_expira_em = models.DateTimeField(null=True, blank=True)
+    senha_alterada_em = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def precisa_trocar_senha(self) -> bool:
+        return self.senha_temporaria
 
     class Meta:
         verbose_name = "usuário"

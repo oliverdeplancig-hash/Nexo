@@ -6,7 +6,7 @@ python -m pytest            # usa nexo.settings_teste (provedor de IA falso, det
 python -m pytest --create-db   # após mudar migrações
 ```
 
-Requer PostgreSQL com pgvector (o banco de teste é criado automaticamente). 117 testes cobrem:
+Requer PostgreSQL com pgvector (o banco de teste é criado automaticamente). 125 testes cobrem:
 
 | Área | Arquivo | Destaques |
 |---|---|---|
@@ -41,6 +41,7 @@ Requer PostgreSQL com pgvector; o banco é `E2E_DATABASE_URL` (padrão
 | `e2e/vigencia.spec.ts` | revogar tira da busca, faixa de revogação, restabelecer |
 | `e2e/ajuda.spec.ts` | Ajuda por perfil, botão "?" contextual, busca sem acentos |
 | `e2e/acessibilidade.spec.ts` | axe-core (WCAG 2.1 A/AA): violações sérias ou críticas reprovam, em 15 telas |
+| `e2e/credenciais.spec.ts` | cadastro com senha gerada, troca obrigatória no 1º acesso, senha temporária deixa de valer |
 | `e2e/celular.spec.ts` | smartphone: navegação inferior, menu, ajuda, sem rolagem horizontal |
 
 ## Integração contínua

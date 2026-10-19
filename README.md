@@ -23,6 +23,8 @@ fazer e descobrem qual setor pode ajudar — sempre dentro do que o seu perfil p
 - **Importação** de PDF, DOCX, TXT, MD e HTML com extração, metadados sugeridos e indexação.
 - **Login institucional** pela conta Microsoft (`@pm.ba.gov.br`), com contas locais para demonstração —
   configuração em [docs/security/login-microsoft.md](docs/security/login-microsoft.md).
+- **Cadastro com envio de acesso por e-mail**: senha temporária gerada pelo Nexo e troca obrigatória no
+  primeiro acesso; cada usuário altera a própria senha no Perfil.
 - **Administração** de usuários, perfis e matriz de permissões por documento.
 - **Auditoria** somente-inserção encadeada por hash, com verificação de integridade.
 - **Cópia de segurança** diária do banco e dos arquivos num pacote cifrado e verificável, com restauração
@@ -79,7 +81,7 @@ Senha dos usuários de demonstração: `Nexo@demo2026` (somente com `NEXO_DEBUG=
 ## Qualidade
 
 ```bash
-cd backend && python -m pytest && ruff check .     # 117 testes
+cd backend && python -m pytest && ruff check .     # 125 testes
 cd frontend && npm run build                       # checagem de tipos + build PWA
 cd frontend && npm run e2e                         # ponta a ponta + acessibilidade (Playwright)
 ```

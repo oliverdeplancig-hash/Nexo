@@ -1,7 +1,8 @@
 # Modelo de autorização
 
 ## Camadas
-1. **Autenticação** — sessão Django; login pela conta Microsoft institucional (ADR-010, ver
+1. **Autenticação** — sessão Django; contas locais com senha gerada, enviada por e-mail e trocada
+   obrigatoriamente no primeiro acesso (ADR-018); login pela conta Microsoft institucional (ADR-010, ver
    [login-microsoft.md](login-microsoft.md)) ou por usuário e senha locais; limite de 10 tentativas/min por IP.
 2. **Funções administrativas** (perfil → funções): importar documentos, gerir coleções, gerir regras,
    gerir setores, administrar usuários, administrar permissões (crítica), ver auditoria.

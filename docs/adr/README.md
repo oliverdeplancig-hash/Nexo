@@ -21,3 +21,4 @@ Formato `ADR-NNN-titulo.md`. Status inicial **Proposta**; ADR aceita não se edi
 | [ADR-015](ADR-015-vigencia-e-revisao.md) | Vigência e revisão periódica de documentos | Proposta | 2026-10-18 |
 | [ADR-016](ADR-016-painel-do-acervo.md) | Painel do acervo e aviso de regra com fonte revogada | Proposta | 2026-10-18 |
 | [ADR-017](ADR-017-testes-ponta-a-ponta-e-ci.md) | Testes de ponta a ponta, acessibilidade automática e integração contínua | Proposta | 2026-10-18 |
+| [ADR-018](ADR-018-credenciais-geradas.md) | Senha gerada pelo Nexo, envio por e-mail e troca obrigatória no primeiro acesso | Proposta | 2026-10-19 |

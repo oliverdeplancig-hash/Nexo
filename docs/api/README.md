@@ -11,6 +11,7 @@ Paginação: `?page=N&tamanho=M` → `{count, next, previous, results}`.
 | GET | `auth/provedores/` | Formas de entrada ativas: `{senha_local, microsoft: {ativo, rotulo}}` |
 | GET | `auth/microsoft/?destino=/caminho` | Redireciona para o login Microsoft (ADR-010) |
 | GET | `auth/microsoft/retorno/` | Retorno da Microsoft; cria a sessão e redireciona ao destino, ou a `/entrar?erro=<código>` |
+| POST | `auth/trocar-senha/` | `{senha_atual, nova_senha}` — obrigatório no 1º acesso com senha temporária (ADR-018) |
 | POST | `auth/sair/` | Encerra a sessão |
 | GET | `auth/eu/` | Usuário, setor, perfis e funções |
 
@@ -90,3 +91,11 @@ Servidor → `notificacao`, `processamento` (progresso da ingestão do próprio 
 | Método | Caminho | Descrição |
 |---|---|---|
 | GET | `painel/acervo/?dias=30` | Totais, por setor, revisões atrasadas e mais consultados — só sobre documentos visíveis. Exige `importar_documentos`, `gerir_regras` ou `ver_auditoria` |
+
+## Credenciais (ADR-018)
+| Método | Caminho | Descrição |
+|---|---|---|
+| POST | `usuarios/` com `gerar_senha: true` | Cadastra, gera senha temporária e envia por e-mail; a resposta traz `credenciais` (única vez) |
+| POST | `usuarios/{id}/gerar-senha/` | Nova senha temporária para quem esqueceu (invalida a anterior) |
+
+Enquanto `trocar_senha` for verdadeiro em `auth/eu/`, as demais rotas respondem 403 `{"codigo": "trocar_senha"}`.
