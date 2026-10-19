@@ -86,7 +86,7 @@ export default function Dashboard() {
         </Box>
       </Box>
 
-      <Box component="section" aria-label="Acesso rápido" sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(4, 1fr)" }, gap: 1.5, mb: 5 }}>
+      <Box component="section" aria-label="Acesso rápido" sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" }, gap: 1.5, mb: 5 }}>
         {atalhos.map((a) => (
           <Box
             key={a.titulo}
@@ -114,7 +114,7 @@ export default function Dashboard() {
         ))}
       </Box>
 
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "3fr 2fr" }, gap: 4 }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", lg: "minmax(0, 3fr) minmax(0, 2fr)" }, gap: 4 }}>
         <Box component="section">
           <TituloSecao acao={<Link component={RouterLink} to="/historico" variant="body2">Ver histórico completo</Link>}>
             Continuar de onde parou

@@ -201,7 +201,7 @@ export function Cartao({ children, sx, ...resto }: { children: ReactNode; sx?: o
 
 export function TituloSecao({ children, acao }: { children: ReactNode; acao?: ReactNode }) {
   return (
-    <Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 2, mb: 1.5 }}>
+    <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", justifyContent: "space-between", columnGap: 2, rowGap: 0.5, mb: 1.5 }}>
       <Typography variant="h3" component="h2" sx={{ fontSize: 18 }}>
         {children}
       </Typography>
