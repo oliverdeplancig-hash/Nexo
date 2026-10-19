@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from apps.comum.permissoes import exige_funcao
 from apps.contas.models import Funcao
 
-from . import copia
+from . import copia, saude
 
 
 @api_view(["GET"])
@@ -33,3 +33,10 @@ def situacao_copias(request):
             "copias": [{k: v for k, v in c.items() if k != "caminho"} for c in copias[:30]],
         }
     )
+
+
+@api_view(["GET"])
+@permission_classes([exige_funcao(Funcao.ADMIN_PERMISSOES)])
+def saude_sistema(request):
+    """Saúde do sistema (ADR-023): banco, disco, cópias, processamento, IA, certificado e configuração."""
+    return Response(saude.verificar())

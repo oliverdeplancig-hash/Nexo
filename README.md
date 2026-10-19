@@ -34,6 +34,8 @@ fazer e descobrem qual setor pode ajudar — sempre dentro do que o seu perfil p
   início automático; depois, migração para a nuvem pela cópia de segurança — ver implantação.
 - **Muitas pessoas ao mesmo tempo**: fila da IA com resposta imediata por trechos quando ela está ocupada,
   teste de carga e dimensionamento — [docs/architecture/capacidade.md](docs/architecture/capacidade.md).
+- **Saúde do sistema** para o administrador: cópias, disco, processamento, IA, certificado e configuração
+  num só painel, com avisos quando algo para.
 - **Memória da conversa** por compactação: o assistente entende perguntas de continuação sem reenviar a
   conversa inteira à IA.
 

@@ -5,6 +5,7 @@ from django.db import close_old_connections
 
 from apps.documentos.vigencia import avisar_revisoes
 from apps.ingestao.pipeline import processar, proximo_da_fila
+from apps.manutencao import saude
 
 AVISOS_A_CADA_SEGUNDOS = 3600
 
@@ -29,7 +30,18 @@ class Command(BaseCommand):
                         self.stdout.write(f"Avisos de revisão enviados: {enviados}")
                 except Exception as erro:  # o worker de ingestão não pode parar por causa dos avisos
                     self.stderr.write(f"Falha ao avisar revisões: {erro}")
+                try:  # problemas de saúde do sistema para os administradores (ADR-023)
+                    avisados = saude.avisar()
+                    if avisados:
+                        self.stdout.write(f"Avisos de saúde do sistema enviados: {avisados}")
+                except Exception as erro:
+                    self.stderr.write(f"Falha ao verificar a saúde do sistema: {erro}")
                 ultimo_aviso = time.monotonic()
+            if continuo:
+                try:
+                    saude.sinal_de_vida(saude.PROCESSO_FILA)  # o painel de saúde sabe que o processador está vivo
+                except Exception as erro:
+                    self.stderr.write(f"Falha ao registrar sinal de vida: {erro}")
             documento = proximo_da_fila()
             if documento:
                 self.stdout.write(f"Processando documento {documento.id}: {documento.titulo}")

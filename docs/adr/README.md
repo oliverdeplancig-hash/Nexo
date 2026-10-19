@@ -26,3 +26,4 @@ Formato `ADR-NNN-titulo.md`. Status inicial **Proposta**; ADR aceita não se edi
 | [ADR-020](ADR-020-capacidade-e-fila-da-ia.md) | Capacidade: 100 pessoas na rede local e caminho para 10 mil na nuvem | Proposta | 2026-10-19 |
 | [ADR-021](ADR-021-memoria-por-compactacao.md) | Memória da conversa por compactação | Proposta | 2026-10-19 |
 | [ADR-022](ADR-022-governanca-do-repositorio.md) | Governança do repositório: versões, contribuição e verificações automáticas | Proposta | 2026-10-19 |
+| [ADR-023](ADR-023-saude-do-sistema.md) | Saúde do sistema: painel, verificação por comando e avisos aos administradores | Proposta | 2026-10-19 |

@@ -65,6 +65,7 @@ aplicativo (PWA), pela rede interna.
 `scripts\servidor.log`). Parar: `scripts\parar-servidor-windows.cmd`. Atualizar: rodar o instalador de novo.
 Restaurar cópia: `scripts\restaurar-windows.cmd` (para e religa o servidor sozinho).
 Medir a capacidade: `python manage.py teste_carga` ([capacidade.md](capacidade.md)).
+Acompanhar: Administração → Saúde do sistema, ou `python manage.py verificar_saude` (ADR-023).
 
 **Ensaio antes da instituição (modo de teste):** num computador parecido com o da instituição, numa
 **cópia separada** da pasta do Nexo, dê dois cliques em `scripts\ensaiar-rede-windows.cmd`. Diferenças: portas

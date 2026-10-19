@@ -416,6 +416,19 @@ export const GRUPOS: Grupo[] = [
           "Guarde a senha das cópias fora do servidor: sem ela nenhuma cópia pode ser aberta.",
         ],
       },
+      {
+        id: "saude-sistema",
+        titulo: "Saúde do sistema",
+        funcao: "admin_permissoes",
+        telas: ["/administracao"],
+        resumo:
+          "Em Administração → Saúde do sistema você vê, num só lugar, se o banco, o espaço em disco, as cópias de segurança, o processamento de documentos, a IA local, o certificado HTTPS e a configuração estão em ordem — e o que fazer quando não estão.",
+        dicas: [
+          "Problemas também chegam como notificação a quem administra permissões, no máximo uma vez por dia por assunto.",
+          "No servidor, manage.py verificar_saude mostra o mesmo resultado no terminal e termina com erro quando há problema (útil para monitoramento da TI).",
+          "A tela mostra só estados e números: nenhum conteúdo de documento nem dado de pessoas.",
+        ],
+      },
     ],
   },
   {

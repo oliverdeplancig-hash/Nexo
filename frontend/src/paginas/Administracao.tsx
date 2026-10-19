@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
@@ -39,6 +40,7 @@ import { useAutenticacao } from "../contexto/Autenticacao";
 import { cores } from "../tema";
 import { data, dataHora, rotuloAcao } from "../util/formatos";
 import CopiasSeguranca from "./CopiasSeguranca";
+import SaudeSistema from "./SaudeSistema";
 
 const ACOES = ["consultar", "visualizar", "baixar", "editar", "compartilhar", "administrar"];
 
@@ -49,8 +51,11 @@ export default function Administracao() {
     { valor: "perfis", rotulo: "Perfis e funções" },
     { valor: "documentos", rotulo: "Permissões por documento" },
     tem("admin_permissoes") && { valor: "copias", rotulo: "Cópias de segurança" },
+    tem("admin_permissoes") && { valor: "saude", rotulo: "Saúde do sistema" },
   ].filter(Boolean) as { valor: string; rotulo: string }[];
-  const [aba, setAba] = useState(abas[0].valor);
+  const [parametros] = useSearchParams();
+  const pedida = parametros.get("aba");
+  const [aba, setAba] = useState(abas.some((a) => a.valor === pedida) ? (pedida as string) : abas[0].valor);
 
   return (
     <Pagina larga>
@@ -62,6 +67,7 @@ export default function Administracao() {
       {aba === "perfis" && <Perfis />}
       {aba === "documentos" && <PermissoesDocumento />}
       {aba === "copias" && <CopiasSeguranca />}
+      {aba === "saude" && <SaudeSistema />}
     </Pagina>
   );
 }

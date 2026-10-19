@@ -38,6 +38,16 @@ def _estado() -> dict:
     return estado
 
 
+def situacao() -> dict:
+    """Gerações em andamento e perguntas esperando neste processo (painel de saúde, ADR-023)."""
+    estados = list(_estados.values())
+    return {
+        "limite": settings.NEXO_IA["CONCORRENCIA"],
+        "gerando": sum(e["gerando"] for e in estados),
+        "esperando": sum(e["esperando"] for e in estados),
+    }
+
+
 @asynccontextmanager
 async def vaga(avisar_posicao: Callable[[int], Awaitable[None]] | None = None):
     estado = _estado()

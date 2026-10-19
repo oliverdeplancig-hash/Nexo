@@ -69,6 +69,7 @@ Servidor → `notificacao`, `processamento` (progresso da ingestão do próprio 
 | Método | Caminho | Descrição |
 |---|---|---|
 | GET | `manutencao/copias/` | Situação das cópias de segurança (exige `admin_permissoes`). Criar e restaurar: comando `copia_seguranca` |
+| GET | `manutencao/saude/` | Saúde do sistema: `{situacao, versao, verificado_em, itens: [{codigo, titulo, situacao, resumo, acao}]}` (exige `admin_permissoes`, ADR-023) |
 
 ## Coleções
 | Método | Caminho | Descrição |
