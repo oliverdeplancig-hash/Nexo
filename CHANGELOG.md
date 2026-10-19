@@ -12,6 +12,7 @@ inicial e versões menores podem mudar comportamento.
 - Capacidade para muitas pessoas ao mesmo tempo: fila da IA com aviso de posição e resposta imediata com
   trechos quando ela está ocupada, conjunto de conexões do banco, teste de carga (`manage.py teste_carga`),
   processos web extras no Linux e guia de dimensionamento (ADR-020).
+- Modo de ensaio do servidor de rede (`instalar-servidor-windows.cmd teste`) e desinstalação sem perda de dados.
 - Memória da conversa por compactação: o assistente entende perguntas de continuação (ADR-021).
 - Governança do repositório: guia de contribuição, política de segurança, modelos de issue e PR,
   verificações antes do commit, atualização automática de dependências e cobertura mínima na CI (ADR-022).

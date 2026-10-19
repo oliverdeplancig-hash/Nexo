@@ -33,6 +33,9 @@ Windows e o modo de depuração mostra detalhes internos.
   autoridade interna. Nenhum serviço externo é usado.
 - **Endereço estável**: a TI define IP fixo ou um nome DNS (ex.: `nexo.<unidade>.local`) para o computador.
 - Cópia de segurança diária agendada (ADR-011), de preferência numa pasta de rede da TI.
+- **Ensaio** num computador parecido, antes da instituição: `instalar-servidor-windows.cmd teste` (portas
+  8443/8080, sem início automático nem mudança de energia, documentos fictícios) e
+  `desinstalar-servidor-windows.cmd` para desfazer sem apagar dados.
 
 **Fase 2 — nuvem governamental:**
 - Servidor Linux sem Docker, como já previsto (`scripts/instalar-servidor.sh`, `deploy/systemd`, nginx com

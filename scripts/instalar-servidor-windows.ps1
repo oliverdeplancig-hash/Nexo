@@ -1,6 +1,9 @@
 # Instala o Nexo como servidor de rede num computador Windows da instituicao (ADR-019).
 # Rode como Administrador: scripts\instalar-servidor-windows.cmd
 # Pode ser repetido: atualiza dependencias, telas e banco, sem apagar dados.
+# Modo de teste (scripts\instalar-servidor-windows.cmd teste): portas 8443/8080, sem inicio automatico, sem
+# mexer na energia do computador, com documentos de demonstracao. Para ensaiar a rede antes da instituicao.
+param([switch]$Teste)
 $ErrorActionPreference = "Stop"
 $raiz = Split-Path -Parent $PSScriptRoot
 $backend = Join-Path $raiz "backend"
@@ -59,6 +62,10 @@ try {
     $extra = Read-Host "      Nome DNS definido pela TI para o Nexo (ex.: nexo.unidade.local; Enter se nao houver)"
     $nomes = @($maquina, $fqdn, "localhost") + @($ips) + @($(if ($extra) { $extra.Trim().ToLower() }))
     $nomes = @($nomes | Where-Object { $_ } | Select-Object -Unique)
+    if ($Teste) {
+        if (-not (Tem-Env "NEXO_PORTA_HTTPS")) { Gravar-Env "NEXO_PORTA_HTTPS" "8443" }
+        if (-not (Tem-Env "NEXO_PORTA_HTTP")) { Gravar-Env "NEXO_PORTA_HTTP" "8080" }
+    }
     $portaHttps = if (Tem-Env "NEXO_PORTA_HTTPS") { ((Select-String -Path $envArq -Pattern "^\s*NEXO_PORTA_HTTPS\s*=(.*)").Matches[0].Groups[1].Value.Trim()) } else { "443" }
     $sufixo = if ($portaHttps -eq "443") { "" } else { ":$portaHttps" }
 
@@ -76,6 +83,12 @@ try {
     $principal = if ($extra) { $extra.Trim().ToLower() } else { $maquina }
     if (-not (Tem-Env "NEXO_URL_PUBLICA")) { Gravar-Env "NEXO_URL_PUBLICA" "https://$principal$sufixo" }
     if (-not (Tem-Env "NEXO_IA_PROVEDOR")) { Gravar-Env "NEXO_IA_PROVEDOR" "ollama" }
+    if ($Teste -and -not (Get-Command ollama -ErrorAction SilentlyContinue) -and
+        -not (Test-Path (Join-Path $env:LOCALAPPDATA "Programs\Ollama\ollama.exe"))) {
+        # Sem IA local o teste de rede segue com respostas por regra e por trechos (provedor de teste).
+        Gravar-Env "NEXO_IA_PROVEDOR" "falso"
+        Write-Host "      Ollama nao encontrado: o teste usa respostas por regra e por trechos, sem IA." -ForegroundColor Yellow
+    }
     # Capacidade (ADR-020): conexoes do banco compartilhadas e fila da IA. Ajuste em docs\architecture\capacidade.md.
     if (-not (Tem-Env "NEXO_DB_POOL_MAXIMO")) { Gravar-Env "NEXO_DB_POOL_MAXIMO" "40" }
     if (-not (Tem-Env "NEXO_IA_CONCORRENCIA")) { Gravar-Env "NEXO_IA_CONCORRENCIA" "2" }
@@ -89,6 +102,10 @@ try {
         Rodar "migracoes" { & $py manage.py migrate --noinput }
         Rodar "arquivos estaticos" { & $py manage.py collectstatic --noinput -v 0 }
         Rodar "dados iniciais" { & $py manage.py inicializar_nexo }
+        if ($Teste) {
+            # Documentos ficticios para ter o que perguntar; as contas .demo sao desativadas logo abaixo.
+            Rodar "documentos de demonstracao" { & $py manage.py carregar_demo --forcar }
+        }
         Rodar "verificacao de producao" { & $py manage.py preparar_producao }
 
         Write-Host "[5/8] Certificado HTTPS..."
@@ -99,33 +116,47 @@ try {
 
     Write-Host "[6/8] Firewall e energia..."
     $portaHttp = if (Tem-Env "NEXO_PORTA_HTTP") { ((Select-String -Path $envArq -Pattern "^\s*NEXO_PORTA_HTTP\s*=(.*)").Matches[0].Groups[1].Value.Trim()) } else { "80" }
-    Get-NetFirewallRule -DisplayName "Nexo (HTTPS e HTTP)" -ErrorAction SilentlyContinue | Remove-NetFirewallRule
-    New-NetFirewallRule -DisplayName "Nexo (HTTPS e HTTP)" -Direction Inbound -Protocol TCP `
+    $regra = if ($Teste) { "Nexo teste (HTTPS e HTTP)" } else { "Nexo (HTTPS e HTTP)" }
+    Get-NetFirewallRule -DisplayName $regra -ErrorAction SilentlyContinue | Remove-NetFirewallRule
+    New-NetFirewallRule -DisplayName $regra -Direction Inbound -Protocol TCP `
         -LocalPort @($portaHttps, $portaHttp) -Action Allow -Profile Domain, Private | Out-Null
-    # Servidor nao pode dormir: os usuarios perderiam o acesso.
-    & powercfg /change standby-timeout-ac 0
-    & powercfg /change hibernate-timeout-ac 0
-
-    Write-Host "[7/8] Inicio automatico com o Windows..."
-    Write-Host "      As tarefas rodam com a sua conta, mesmo sem ninguem conectado. Informe a sua senha do Windows."
-    $cred = Get-Credential -UserName "$env:USERDOMAIN\$env:USERNAME" -Message "Senha do Windows para as tarefas do Nexo"
-    $senhaTexto = $cred.GetNetworkCredential().Password
-    $acao = New-ScheduledTaskAction -Execute "powershell.exe" `
-        -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$(Join-Path $PSScriptRoot 'servidor-windows.ps1')`""
-    $opcoes = New-ScheduledTaskSettingsSet -StartWhenAvailable -DontStopIfGoingOnBatteries -AllowStartIfOnBatteries `
-        -ExecutionTimeLimit ([TimeSpan]::Zero) -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1)
-    Register-ScheduledTask -TaskName "Nexo - servidor" -Action $acao -Trigger (New-ScheduledTaskTrigger -AtStartup) `
-        -Settings $opcoes -User $cred.UserName -Password $senhaTexto -RunLevel Highest `
-        -Description "Servidor de rede do Nexo (scripts\servidor-windows.ps1)" -Force | Out-Null
-    $tarefaCopia = Get-ScheduledTask -TaskName "Nexo - copia de seguranca" -ErrorAction SilentlyContinue
-    if ($tarefaCopia) {
-        Set-ScheduledTask -TaskName "Nexo - copia de seguranca" -User $cred.UserName -Password $senhaTexto | Out-Null
-    } else {
-        Write-Host "      Agende a copia de seguranca diaria: scripts\agendar-copia-windows.cmd" -ForegroundColor Yellow
+    $perfis = @(Get-NetConnectionProfile -ErrorAction SilentlyContinue | Where-Object { $_.NetworkCategory -eq "Public" })
+    if ($perfis) {
+        Write-Host "      ATENCAO: a rede '$($perfis[0].Name)' esta como Publica; outros aparelhos nao vao alcancar o Nexo." -ForegroundColor Yellow
+        Write-Host "      Em Configuracoes > Rede, marque-a como Privada (so em rede confiavel)." -ForegroundColor Yellow
     }
-    $senhaTexto = $null
-    Get-Process daphne -ErrorAction SilentlyContinue | Stop-Process -Force
-    Start-ScheduledTask -TaskName "Nexo - servidor"
+    if (-not $Teste) {
+        # Servidor nao pode dormir: os usuarios perderiam o acesso.
+        & powercfg /change standby-timeout-ac 0
+        & powercfg /change hibernate-timeout-ac 0
+    }
+
+    if ($Teste) {
+        Write-Host "[7/8] Modo de teste: sem inicio automatico. Abrindo o servidor numa janela propria..."
+        Get-Process daphne -ErrorAction SilentlyContinue | Stop-Process -Force
+        Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -NoExit -File `"$(Join-Path $PSScriptRoot 'servidor-windows.ps1')`""
+    } else {
+        Write-Host "[7/8] Inicio automatico com o Windows..."
+        Write-Host "      As tarefas rodam com a sua conta, mesmo sem ninguem conectado. Informe a sua senha do Windows."
+        $cred = Get-Credential -UserName "$env:USERDOMAIN\$env:USERNAME" -Message "Senha do Windows para as tarefas do Nexo"
+        $senhaTexto = $cred.GetNetworkCredential().Password
+        $acao = New-ScheduledTaskAction -Execute "powershell.exe" `
+            -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$(Join-Path $PSScriptRoot 'servidor-windows.ps1')`""
+        $opcoes = New-ScheduledTaskSettingsSet -StartWhenAvailable -DontStopIfGoingOnBatteries -AllowStartIfOnBatteries `
+            -ExecutionTimeLimit ([TimeSpan]::Zero) -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1)
+        Register-ScheduledTask -TaskName "Nexo - servidor" -Action $acao -Trigger (New-ScheduledTaskTrigger -AtStartup) `
+            -Settings $opcoes -User $cred.UserName -Password $senhaTexto -RunLevel Highest `
+            -Description "Servidor de rede do Nexo (scripts\servidor-windows.ps1)" -Force | Out-Null
+        $tarefaCopia = Get-ScheduledTask -TaskName "Nexo - copia de seguranca" -ErrorAction SilentlyContinue
+        if ($tarefaCopia) {
+            Set-ScheduledTask -TaskName "Nexo - copia de seguranca" -User $cred.UserName -Password $senhaTexto | Out-Null
+        } else {
+            Write-Host "      Agende a copia de seguranca diaria: scripts\agendar-copia-windows.cmd" -ForegroundColor Yellow
+        }
+        $senhaTexto = $null
+        Get-Process daphne -ErrorAction SilentlyContinue | Stop-Process -Force
+        Start-ScheduledTask -TaskName "Nexo - servidor"
+    }
 
     # A senha temporaria do administrador nao pode ficar gravada no registro da instalacao.
     Stop-Transcript | Out-Null
@@ -154,6 +185,11 @@ try {
     Write-Host "(politica de grupo, 'Autoridades de Certificacao Raiz Confiaveis'); sem isso o navegador mostra um aviso."
     Write-Host "Ou substitua nexo.key e nexo.crt pelo certificado emitido pela TI e reinicie a tarefa 'Nexo - servidor'."
     Write-Host "Registro do servidor: scripts\servidor.log. Para parar: scripts\parar-servidor-windows.cmd"
+    if ($Teste) {
+        Write-Host ""
+        Write-Host "MODO DE TESTE. Para desfazer: scripts\desinstalar-servidor-windows.cmd" -ForegroundColor Yellow
+        Write-Host "Outro aparelho na mesma rede (celular no Wi-Fi, outro PC ou o Windows Sandbox) deve abrir o endereco acima."
+    }
 } catch {
     Write-Host "ERRO: $_" -ForegroundColor Red
 } finally {

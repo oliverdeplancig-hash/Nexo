@@ -12,6 +12,7 @@ $env:PYTHONUTF8 = "1"
 function Escrever($texto) {
     $linha = "{0:yyyy-MM-dd HH:mm:ss}  {1}" -f (Get-Date), $texto
     Add-Content -Path $log -Value $linha -Encoding UTF8
+    Write-Host $linha  # visivel quando aberto numa janela (modo de teste)
 }
 
 function Valor-Env($chave, $padrao) {
