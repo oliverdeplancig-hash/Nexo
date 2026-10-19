@@ -7,6 +7,7 @@ Novos provedores exigem ADR (ver docs/adr/ADR-004).
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import logging
@@ -140,9 +141,12 @@ class ProvedorFalso(Provedor):
             linhas = [re.sub(r"^[#>\s*-]+", "", x).strip() for x in conteudo.strip().split("\n")]
             frase = " ".join(x for x in linhas if x)[:280]
             partes.append(f"- {frase} [{numero}]\n")
+        atraso = settings.NEXO_IA.get("FALSO_ATRASO", 0.0)
         for parte in partes:
             for palavra in re.split(r"(\s+)", parte):
                 if palavra:
+                    if atraso and not palavra.isspace():
+                        await asyncio.sleep(atraso)
                     yield palavra
 
 

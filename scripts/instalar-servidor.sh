@@ -16,5 +16,7 @@ sudo -u nexo .venv/bin/python manage.py inicializar_nexo
 cp "$DESTINO/deploy/systemd/"*.service "$DESTINO/deploy/systemd/"*.timer /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable --now nexo-web nexo-ingestao nexo-copia.timer
+grep -q '^NEXO_ATRAS_DE_PROXY=true' .env || echo "ATENÇÃO: atrás do nginx, defina NEXO_ATRAS_DE_PROXY=true no .env (HTTPS e cookies seguros)."
+grep -q '^NEXO_DB_POOL_MAXIMO=[1-9]' .env || echo "Recomendado: NEXO_DB_POOL_MAXIMO=40 no .env (muitas pessoas ao mesmo tempo, ADR-020)."
 grep -q '^NEXO_BACKUP_SENHA=.' .env || echo "ATENÇÃO: defina NEXO_BACKUP_SENHA no .env (as cópias diárias falham sem ela)."
 echo "Nexo instalado. Publique $DESTINO/frontend/dist no servidor web (ver deploy/nginx/nexo.conf)."

@@ -23,8 +23,10 @@ reavaliadas pelo orquestrador. Nada é transmitido para grupos compartilhados.
 import asyncio
 import logging
 
+from asgiref.sync import ThreadSensitiveContext, sync_to_async
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from django.db import connections
 
 from .orquestrador import ErroConversa, executar
 
@@ -87,6 +89,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             except (TypeError, ValueError):
                 return None
 
+        # Capacidade (ADR-020): cada pergunta usa a sua própria linha de execução para o banco. Sem isto, as
+        # etapas síncronas de todas as conversas abertas no processo fariam fila numa única linha.
+        async with ThreadSensitiveContext():
+            try:
+                await self._executar(usuario, conteudo, _inteiro)
+            finally:
+                await sync_to_async(connections.close_all)()  # devolve a conexão desta linha de execução
+
+    async def _executar(self, usuario, conteudo, _inteiro):
         try:
             await executar(
                 usuario,

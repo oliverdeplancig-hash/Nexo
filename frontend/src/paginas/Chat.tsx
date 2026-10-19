@@ -83,6 +83,7 @@ export default function Chat() {
   const criadaAgora = useRef<number | null>(null);
   const fimRef = useRef<HTMLDivElement>(null);
   const estado = local.state as { pergunta?: string; documentoId?: number; documentoTitulo?: string; nova?: number } | null;
+  const [compactadas, setCompactadas] = useState(0);
   const [documentoContexto, setDocumentoContexto] = useState<{ id: number; titulo: string } | null>(
     estado?.documentoId ? { id: estado.documentoId, titulo: estado.documentoTitulo ?? "Documento" } : null,
   );
@@ -146,6 +147,7 @@ export default function Chat() {
     idAtual.current = id;
     setErro(null);
     setRascunho(null);
+    setCompactadas(0);
     if (!id) {
       setMensagens([]);
       if (!estado?.documentoId) setDocumentoContexto(null);
@@ -155,6 +157,7 @@ export default function Chat() {
     Promise.all([api<Conversa>(`/conversas/${id}/`), api<Mensagem[]>(`/conversas/${id}/mensagens/`)])
       .then(([conversa, lista]) => {
         setMensagens(lista);
+        setCompactadas(conversa.memoria?.mensagens_compactadas ?? 0);
         setDocumentoContexto(
           conversa.documento_contexto ? { id: conversa.documento_contexto, titulo: conversa.documento_contexto_titulo ?? "Documento" } : null,
         );
@@ -312,6 +315,12 @@ export default function Chat() {
         <Box sx={{ flex: 1, px: { xs: 2, md: 4 }, py: 3 }} aria-live="polite">
           <Box sx={{ maxWidth: medidas.conteudoMax, mx: "auto", display: "flex", flexDirection: "column", gap: 3 }}>
             {vazio && <EstadoInicial aoEscolher={(s) => setTexto(s)} />}
+            {compactadas > 0 && (
+              <Typography variant="caption" component="p" sx={{ textAlign: "center", fontSize: 12 }}>
+                Conversa longa: as mensagens mais antigas foram resumidas para o assistente entender as próximas perguntas. Elas
+                continuam aqui para você.
+              </Typography>
+            )}
             {mensagens.map((m) =>
               m.papel === "usuario" ? (
                 <MensagemUsuario key={m.id} m={m} nome={usuario?.nome ?? ""} />

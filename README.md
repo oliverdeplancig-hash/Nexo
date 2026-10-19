@@ -30,6 +30,12 @@ fazer e descobrem qual setor pode ajudar — sempre dentro do que o seu perfil p
 - **Cópia de segurança** diária do banco e dos arquivos num pacote cifrado e verificável, com restauração
   segura — [docs/architecture/copia-de-seguranca.md](docs/architecture/copia-de-seguranca.md).
 - **PWA responsiva**: desktop, tablet e smartphone com o mesmo app.
+- **Servidor de rede no Windows**: um computador da instituição atende os demais pela rede, com HTTPS e
+  início automático; depois, migração para a nuvem pela cópia de segurança — ver implantação.
+- **Muitas pessoas ao mesmo tempo**: fila da IA com resposta imediata por trechos quando ela está ocupada,
+  teste de carga e dimensionamento — [docs/architecture/capacidade.md](docs/architecture/capacidade.md).
+- **Memória da conversa** por compactação: o assistente entende perguntas de continuação sem reenviar a
+  conversa inteira à IA.
 
 ## Estrutura
 
@@ -91,6 +97,9 @@ cd frontend && npm run e2e                         # ponta a ponta + acessibilid
 - Arquitetura: [docs/architecture/visao-geral.md](docs/architecture/visao-geral.md)
 - Motor determinístico e IA: [docs/architecture/ia-e-motor.md](docs/architecture/ia-e-motor.md)
 - Implantação: [docs/architecture/implantacao.md](docs/architecture/implantacao.md)
+- Capacidade e dimensionamento: [docs/architecture/capacidade.md](docs/architecture/capacidade.md)
 - Decisões: [docs/adr/](docs/adr/README.md)
+- Contribuição, versões e segurança: [CONTRIBUTING.md](CONTRIBUTING.md) · [CHANGELOG.md](CHANGELOG.md) ·
+  [SECURITY.md](SECURITY.md)
 - Segurança: [docs/security/](docs/security/modelo-de-autorizacao.md)
 - API e WebSocket: [docs/api/README.md](docs/api/README.md)

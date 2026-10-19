@@ -44,7 +44,7 @@ Paginação: `?page=N&tamanho=M` → `{count, next, previous, results}`.
 | GET | `busca/?q=&modo=hibrida\|texto\|semantica\|nome` | Resultados agrupados por documento + facetas |
 | GET | `setores/` · `setores/quem-pode-ajudar/?pergunta=` | Diretório e roteamento |
 | CRUD | `motor/regras/` · POST `{id}/publicar/` · GET `{id}/versoes/` · POST `simular/` | Motor determinístico |
-| GET | `conversas/` · `conversas/{id}/mensagens/` | Histórico |
+| GET | `conversas/` · `conversas/{id}/mensagens/` | Histórico; cada conversa traz `memoria: {mensagens_compactadas, itens}` (ADR-021) |
 | POST | `conversas/perguntar/` | `{texto, conversa_id?, documento_id?}` sem streaming |
 | PUT · DELETE | `mensagens/{id}/avaliacao/` | `{util, motivo?, comentario?}` — só o autor, só respostas do assistente |
 | GET | `avaliacoes/motivos/` | Motivos de "não útil" |
@@ -58,8 +58,9 @@ Paginação: `?page=N&tamanho=M` → `{count, next, previous, results}`.
 
 ## WebSocket `/ws/chat/`
 Cliente → `{"tipo":"mensagem","texto","conversa_id?","documento_id?"}`, `{"tipo":"interromper"}`, `{"tipo":"ping"}`.
-Servidor → `pronto`, `conversa`, `pergunta_registrada`, `status` (`analisando`, `consultando_fontes`, `gerando`),
-`token`, `aviso` (`ia_indisponivel`), `resposta`, `erro`, `pong`. Fechamento `4401` = sessão inválida.
+Servidor → `pronto`, `conversa`, `pergunta_registrada`, `status` (`analisando`, `consultando_fontes`, `na_fila`,
+`gerando`), `token`, `aviso` (`ia_indisponivel`, `ia_ocupada` — fila da IA cheia, ADR-020), `resposta`, `erro`,
+`pong`. Fechamento `4401` = sessão inválida; `4403` = precisa criar a senha (ADR-018).
 
 ## WebSocket `/ws/eventos/`
 Servidor → `notificacao`, `processamento` (progresso da ingestão do próprio usuário).

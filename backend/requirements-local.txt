@@ -1,5 +1,7 @@
 # Instalação local sem servidor PostgreSQL: PostgreSQL 16 + pgvector embutidos.
-# Usado por scripts/iniciar-windows.cmd. NÃO usar no servidor da instituição.
+# Usado no Windows: iniciar-windows.cmd (uso individual) e instalar-servidor-windows.cmd (servidor de rede,
+# ADR-019). O servidor Linux usa PostgreSQL instalado e requirements.txt.
 -r requirements-dev.txt
 pgserver==0.1.4
 tzdata>=2024.1
+twisted[tls]>=24.3         # HTTPS direto no daphne (servidor de rede Windows, ADR-019)

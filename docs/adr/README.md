@@ -22,3 +22,7 @@ Formato `ADR-NNN-titulo.md`. Status inicial **Proposta**; ADR aceita não se edi
 | [ADR-016](ADR-016-painel-do-acervo.md) | Painel do acervo e aviso de regra com fonte revogada | Proposta | 2026-10-18 |
 | [ADR-017](ADR-017-testes-ponta-a-ponta-e-ci.md) | Testes de ponta a ponta, acessibilidade automática e integração contínua | Proposta | 2026-10-18 |
 | [ADR-018](ADR-018-credenciais-geradas.md) | Senha gerada pelo Nexo, envio por e-mail e troca obrigatória no primeiro acesso | Proposta | 2026-10-19 |
+| [ADR-019](ADR-019-implantacao-em-fases.md) | Implantação em fases: computador da instituição na rede local, depois nuvem governamental | Proposta | 2026-10-19 |
+| [ADR-020](ADR-020-capacidade-e-fila-da-ia.md) | Capacidade: 100 pessoas na rede local e caminho para 10 mil na nuvem | Proposta | 2026-10-19 |
+| [ADR-021](ADR-021-memoria-por-compactacao.md) | Memória da conversa por compactação | Proposta | 2026-10-19 |
+| [ADR-022](ADR-022-governanca-do-repositorio.md) | Governança do repositório: versões, contribuição e verificações automáticas | Proposta | 2026-10-19 |

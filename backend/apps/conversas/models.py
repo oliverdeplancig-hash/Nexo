@@ -14,6 +14,8 @@ class Conversa(models.Model):
         help_text="Quando informado, a IA só usa este documento (respeitando as permissões atuais).",
     )
     arquivada = models.BooleanField(default=False)
+    # Memória por compactação (ADR-021): resumo determinístico das mensagens antigas desta conversa.
+    memoria = models.JSONField(default=dict, blank=True)
     criada_em = models.DateTimeField(auto_now_add=True)
     atualizada_em = models.DateTimeField(auto_now=True)
 

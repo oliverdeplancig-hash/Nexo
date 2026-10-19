@@ -11,6 +11,14 @@ try {
     if (-not (Test-Path $py)) { throw "Ambiente Python nao encontrado. Rode scripts\iniciar-windows.cmd uma vez." }
 
     Write-Host "Parando o Nexo (o banco continua ligado para a restauracao)..."
+    $servidor = Get-ScheduledTask -TaskName "Nexo - servidor" -ErrorAction SilentlyContinue
+    if ($servidor -and $servidor.State -eq "Running") {
+        # Servidor de rede (ADR-019): pede a parada ao supervisor e espera.
+        Set-Content -Path (Join-Path $PSScriptRoot "servidor.parar") -Value "parar"
+        for ($i = 0; $i -lt 30 -and (Test-Path (Join-Path $PSScriptRoot "servidor.parar")); $i++) { Start-Sleep 1 }
+        Stop-ScheduledTask -TaskName "Nexo - servidor" -ErrorAction SilentlyContinue
+        Remove-Item (Join-Path $PSScriptRoot "servidor.parar") -ErrorAction SilentlyContinue
+    }
     Get-Process daphne -ErrorAction SilentlyContinue | Stop-Process -Force
     Start-Sleep -Seconds 2
     $banco = Start-Process -FilePath $py -ArgumentList "banco_local.py", "iniciar" -WorkingDirectory $backend `
@@ -47,9 +55,15 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "A restauracao falhou (detalhes acima). O banco foi mantido como estava." }
     } finally { Pop-Location }
     Write-Host ""
-    Write-Host "Restauracao concluida. Abra o Nexo com scripts\iniciar-windows.cmd" -ForegroundColor Green
+    if ($servidor) {
+        Write-Host "Restauracao concluida. O servidor de rede do Nexo sera religado." -ForegroundColor Green
+    } else {
+        Write-Host "Restauracao concluida. Abra o Nexo com scripts\iniciar-windows.cmd" -ForegroundColor Green
+    }
 } catch {
     Write-Host "ERRO: $_" -ForegroundColor Red
 } finally {
+    # Com ou sem restauracao (cancelada, falhou), o servidor de rede volta a funcionar.
+    if ($servidor) { Start-ScheduledTask -TaskName "Nexo - servidor" -ErrorAction SilentlyContinue }
     Stop-Transcript | Out-Null
 }

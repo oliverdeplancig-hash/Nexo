@@ -42,8 +42,20 @@ def montar_contexto(trechos: list[TrechoContexto]) -> str:
     return "\n---\n".join(blocos)
 
 
-def montar_mensagens(pergunta: str, trechos: list[TrechoContexto], historico: list[dict] | None = None) -> list[dict]:
-    mensagens = [{"role": "system", "content": PROMPT_SISTEMA}]
+PROMPT_MEMORIA = """
+Resumo do início desta conversa (serve só para entender a pergunta atual; não é fonte e não pode ser citado):
+{resumo}
+"""
+
+
+def montar_mensagens(
+    pergunta: str,
+    trechos: list[TrechoContexto],
+    historico: list[dict] | None = None,
+    resumo_conversa: str = "",
+) -> list[dict]:
+    sistema = PROMPT_SISTEMA + (PROMPT_MEMORIA.format(resumo=resumo_conversa) if resumo_conversa else "")
+    mensagens = [{"role": "system", "content": sistema}]
     for item in (historico or [])[-6:]:
         mensagens.append({"role": item["role"], "content": item["content"][:2000]})
     mensagens.append(

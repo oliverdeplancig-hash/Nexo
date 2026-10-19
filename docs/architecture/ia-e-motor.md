@@ -35,6 +35,16 @@ componentes da pontuação, regra e versão escolhidas.
 - Selo de confiança: **verificada** (motor), **fundamentada** (RAG com citações), **cautela** (sem
   citações, sem fontes ou extrativo).
 
+## Memória da conversa (ADR-021, `apps/conversas/memoria.py`)
+- As 6 mensagens mais recentes vão literais à IA; as anteriores viram um resumo determinístico (perguntas,
+  origem, documentos citados), sem o texto das respostas e com os títulos filtrados pelas permissões atuais.
+- Perguntas de continuação ("e o prazo?") são buscadas junto com a pergunta anterior.
+
+## Fila da IA (ADR-020, `apps/ia/fila.py`)
+- No máximo `NEXO_IA_CONCORRENCIA` gerações por processo; as demais esperam a vez, com aviso de posição.
+- Fila cheia ou espera acima de `NEXO_IA_ESPERA_MAXIMA` → resposta imediata com os trechos (extrativa).
+- Motor, busca e telas não passam pela fila. Dimensionamento em [capacidade.md](capacidade.md).
+
 ## Modelos recomendados (Ollama)
 
 | Uso | Modelo | Observação |

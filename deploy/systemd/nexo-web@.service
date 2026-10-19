@@ -1,0 +1,21 @@
+# Processo web adicional do Nexo na porta indicada pelo nome (ADR-020): systemctl enable --now nexo-web@8001
+# Exige NEXO_REDIS_URL no .env (mensagens e limites compartilhados entre processos) e a linha
+# correspondente no bloco "upstream nexo_web" do nginx.
+[Unit]
+Description=Nexo — processo web adicional (porta %i)
+After=network.target postgresql.service redis-server.service
+
+[Service]
+User=nexo
+Group=nexo
+WorkingDirectory=/opt/nexo/backend
+EnvironmentFile=/opt/nexo/backend/.env
+ExecStart=/opt/nexo/backend/.venv/bin/daphne -b 127.0.0.1 -p %i --proxy-headers nexo.asgi:application
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/nexo
+
+[Install]
+WantedBy=multi-user.target

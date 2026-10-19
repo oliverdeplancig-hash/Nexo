@@ -1,0 +1,25 @@
+# Verificações antes de cada commit (ADR-022). Instalar uma vez: pip install pre-commit && pre-commit install
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: detect-private-key
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.8
+    hooks:
+      - id: ruff-check
+        args: ["--fix"]
+        files: ^backend/
+      - id: ruff-format
+        files: ^backend/
+  - repo: local
+    hooks:
+      - id: sem-arquivos-de-senha
+        name: Bloqueia arquivos de senha, credenciais e planilhas de usuários
+        entry: Arquivo sensível não pode ir para o repositório
+        language: fail
+        files: '(?i)((senha|credenciais|usuarios)[^/]*\.(txt|xlsx|xls|csv|docx)$|(^|/)\.env$|\.nexobak$|\.pem$|\.key$)'

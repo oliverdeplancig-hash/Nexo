@@ -89,6 +89,8 @@ def _lacunas_base():
     return (
         Mensagem.objects.filter(papel=Mensagem.Papel.ASSISTENTE)
         .filter(Q(origem__in=ORIGENS_LACUNA) | Q(avaliacao__util=False))
+        # Resposta só com trechos porque a fila da IA estava cheia (ADR-020) não é falta de conhecimento.
+        .filter(Q(avaliacao__util=False) | ~Q(rastro__has_key="ia_ocupada"))
         .annotate(pergunta=Subquery(pergunta.values("conteudo")[:1]))
         .select_related("avaliacao", "tratamento", "tratamento__tratada_por", "tratamento__regra")
         .order_by("-criada_em", "-id")

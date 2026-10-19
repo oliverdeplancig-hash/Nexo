@@ -53,6 +53,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "apps.comum.https.RedirecionaParaHttps",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -86,6 +88,16 @@ TEMPLATES = [
 # --------------------------------------------------------------------------
 DATABASES = {"default": env.db("NEXO_DATABASE_URL", default="postgres://nexo:nexo@localhost:5432/nexo")}
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("NEXO_DB_CONN_MAX_AGE", default=60)
+# Capacidade (ADR-020): com muitas pessoas ao mesmo tempo, cada processo web usa um conjunto limitado de conexões
+# (o PostgreSQL aceita 100 por padrão). Quem passar do limite espera uma conexão livre em vez de falhar.
+NEXO_DB_POOL_MAXIMO = env.int("NEXO_DB_POOL_MAXIMO", default=0)  # 0 = sem conjunto (desenvolvimento e testes)
+if NEXO_DB_POOL_MAXIMO:
+    DATABASES["default"]["CONN_MAX_AGE"] = 0
+    DATABASES["default"].setdefault("OPTIONS", {})["pool"] = {
+        "min_size": 2,
+        "max_size": NEXO_DB_POOL_MAXIMO,
+        "timeout": env.float("NEXO_DB_POOL_ESPERA", default=30.0),
+    }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "contas.Usuario"
@@ -110,6 +122,25 @@ USE_TZ = True
 # --------------------------------------------------------------------------
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Servidor de rede no Windows (ADR-019): o próprio Nexo entrega as telas compiladas (frontend/dist) no mesmo
+# endereço da API. No servidor Linux quem entrega as telas é o nginx e isto fica desligado.
+NEXO_SERVIR_FRONTEND = env.bool("NEXO_SERVIR_FRONTEND", default=False)
+NEXO_FRONTEND_DIST = Path(env("NEXO_FRONTEND_DIST", default=str(BASE_DIR.parent / "frontend" / "dist")))
+WHITENOISE_ROOT = NEXO_FRONTEND_DIST if NEXO_SERVIR_FRONTEND and NEXO_FRONTEND_DIST.exists() else None
+WHITENOISE_INDEX_FILE = True
+
+
+def WHITENOISE_IMMUTABLE_FILE_TEST(caminho, url):  # noqa: N802 — nome exigido pelo WhiteNoise
+    return url.startswith("/assets/")  # arquivos do Vite têm hash no nome
+
+
+# HTTPS: no Windows o próprio daphne fala TLS; atrás do nginx, confia no cabeçalho que ele envia.
+# Redirecionamento HTTP → HTTPS pelo middleware do Nexo, que conhece a porta HTTPS (padrão 443).
+NEXO_REDIRECIONAR_HTTPS = env.bool("NEXO_REDIRECIONAR_HTTPS", default=False)
+NEXO_PORTA_HTTPS = env.int("NEXO_PORTA_HTTPS", default=443)
+if env.bool("NEXO_ATRAS_DE_PROXY", default=False):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Os documentos NUNCA são servidos diretamente pelo servidor web: o download
 # passa por uma view que aplica o motor de permissões e registra auditoria.
@@ -162,6 +193,8 @@ if _REDIS_URL:
             "CONFIG": {"hosts": [_REDIS_URL]},
         }
     }
+    # Vários processos (nuvem, ADR-020): limites de requisição e de login precisam ser contados juntos.
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": _REDIS_URL}}
 else:
     CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
@@ -180,6 +213,19 @@ NEXO_IA = {
     "CONTEXTO_MAX_TRECHOS": env.int("NEXO_CONTEXTO_MAX_TRECHOS", default=6),
     "SIMILARIDADE_MINIMA": env.float("NEXO_SIMILARIDADE_MINIMA", default=0.45),
     "TIMEOUT_SEGUNDOS": env.float("NEXO_IA_TIMEOUT", default=120.0),
+    # Fila de geração (ADR-020): gerações simultâneas por processo web, tamanho da fila e espera máxima.
+    "CONCORRENCIA": env.int("NEXO_IA_CONCORRENCIA", default=2),
+    "FILA_MAXIMA": env.int("NEXO_IA_FILA_MAXIMA", default=50),
+    "ESPERA_MAXIMA_SEGUNDOS": env.float("NEXO_IA_ESPERA_MAXIMA", default=45.0),
+    # Só para o teste de carga com o provedor "falso": segundos por palavra, imitando a velocidade de um LLM.
+    "FALSO_ATRASO": env.float("NEXO_IA_FALSO_ATRASO", default=0.0),
+}
+
+# Memória da conversa por compactação (ADR-021): mensagens recentes vão literais ao LLM; as anteriores
+# viram um resumo determinístico da própria conversa.
+NEXO_MEMORIA = {
+    "JANELA_RECENTE": env.int("NEXO_MEMORIA_JANELA", default=6),
+    "MAXIMO_ITENS": env.int("NEXO_MEMORIA_MAXIMO_ITENS", default=12),
 }
 
 NEXO_MOTOR = {

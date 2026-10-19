@@ -201,6 +201,8 @@ export interface Conversa {
   arquivada: boolean;
   criada_em: string;
   ultima_mensagem_em: string;
+  /** Memória por compactação (ADR-021). */
+  memoria?: { mensagens_compactadas: number; itens: number };
 }
 
 export interface ResultadoBusca {

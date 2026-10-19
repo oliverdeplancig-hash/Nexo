@@ -32,3 +32,20 @@ def status_servicos(request):
             "motor_deterministico": True,
         }
     )
+
+
+def aplicativo(request, *args, **kwargs):
+    """index.html do frontend compilado, sem cache (o service worker e os assets cuidam do resto)."""
+    from django.conf import settings
+    from django.http import FileResponse, HttpResponse
+
+    indice = settings.NEXO_FRONTEND_DIST / "index.html"
+    if not indice.exists():
+        return HttpResponse(
+            "Telas do Nexo não encontradas. Gere com: cd frontend && npm run build",
+            status=503,
+            content_type="text/plain",
+        )
+    resposta = FileResponse(open(indice, "rb"), content_type="text/html; charset=utf-8")
+    resposta["Cache-Control"] = "no-cache"
+    return resposta

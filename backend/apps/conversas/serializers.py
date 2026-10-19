@@ -67,6 +67,7 @@ class MensagemSerializer(serializers.ModelSerializer):
 class ConversaSerializer(serializers.ModelSerializer):
     documento_contexto_titulo = serializers.SerializerMethodField()
     ultima_mensagem_em = serializers.DateTimeField(source="atualizada_em", read_only=True)
+    memoria = serializers.SerializerMethodField()
 
     class Meta:
         model = Conversa
@@ -78,8 +79,14 @@ class ConversaSerializer(serializers.ModelSerializer):
             "arquivada",
             "criada_em",
             "ultima_mensagem_em",
+            "memoria",
         ]
         read_only_fields = ["documento_contexto", "criada_em"]
+
+    def get_memoria(self, obj) -> dict:
+        from .memoria import resumo_publico
+
+        return resumo_publico(obj)
 
     def get_documento_contexto_titulo(self, obj):
         doc = obj.documento_contexto

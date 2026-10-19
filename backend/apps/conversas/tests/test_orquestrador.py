@@ -101,3 +101,25 @@ def test_ia_indisponivel_degrada_para_extrativo(usuarios, criar_documento, monke
     assert msg["origem"] == Origem.EXTRATIVO
     assert any(e["tipo"] == "aviso" and e["codigo"] == "ia_indisponivel" for e in eventos)
     assert msg["fontes"] and msg["fontes"][0]["citada"]
+
+
+def test_fila_da_ia_cheia_responde_com_trechos_sem_virar_lacuna(usuarios, criar_documento, monkeypatch):
+    """ADR-020: com a fila cheia a pessoa recebe os trechos na hora; isso não é falta de conhecimento."""
+    from contextlib import asynccontextmanager
+
+    from apps.conversas import lacunas, orquestrador
+    from apps.ia.fila import IAOcupada
+
+    criar_documento("Manual de diárias", "As diárias devem ser solicitadas com cinco dias de antecedência.")
+
+    @asynccontextmanager
+    async def cheia(avisar=None):
+        raise IAOcupada()
+        yield  # pragma: no cover
+
+    monkeypatch.setattr(orquestrador, "vaga", cheia)
+    eventos, msg = _perguntar(usuarios["gp"], "antecedência das diárias")
+    assert msg["origem"] == Origem.EXTRATIVO and msg["fontes"]
+    assert any(e["tipo"] == "aviso" and e["codigo"] == "ia_ocupada" for e in eventos)
+    assert "muitas perguntas" in msg["conteudo"].lower()
+    assert not lacunas._lacunas_base().filter(pk=msg["id"]).exists()

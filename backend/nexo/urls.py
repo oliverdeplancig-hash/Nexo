@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 
 api = [
     path("", include("apps.contas.urls")),
@@ -25,3 +25,10 @@ urlpatterns = [
 # é feita pelas telas do Nexo. Pode ser desligado em produção.
 if settings.DEBUG or getattr(settings, "NEXO_ADMIN_DJANGO", False):
     urlpatterns.append(path("django-admin/", admin.site.urls))
+
+# Telas do Nexo servidas pelo próprio backend (servidor de rede no Windows, ADR-019): qualquer rota que não seja
+# da API devolve o index.html do React. Arquivos (assets, sw.js, ícones) saem antes, pelo WhiteNoise.
+if settings.NEXO_SERVIR_FRONTEND:
+    from apps.comum.views import aplicativo
+
+    urlpatterns.append(re_path(r"^(?!api/|ws/|static/|django-admin/).*$", aplicativo, name="aplicativo"))

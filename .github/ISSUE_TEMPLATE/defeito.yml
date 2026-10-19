@@ -1,0 +1,31 @@
+name: Defeito
+description: Algo não funciona como deveria
+labels: ["defeito"]
+body:
+  - type: markdown
+    attributes:
+      value: "Não inclua dados institucionais reais, nomes de pessoas, senhas ou trechos de documentos internos."
+  - type: textarea
+    id: o-que
+    attributes:
+      label: O que aconteceu
+      description: E o que você esperava que acontecesse.
+    validations:
+      required: true
+  - type: textarea
+    id: passos
+    attributes:
+      label: Como reproduzir
+      placeholder: "1. Entrar com o perfil ...\n2. Abrir ...\n3. ..."
+    validations:
+      required: true
+  - type: dropdown
+    id: onde
+    attributes:
+      label: Onde
+      options: [Computador local, Servidor de rede Windows, Servidor Linux, Celular (PWA)]
+  - type: input
+    id: versao
+    attributes:
+      label: Versão ou commit
+      description: Aparece no CHANGELOG.md ou em `git log -1`.

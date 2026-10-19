@@ -32,3 +32,10 @@ backend/.armazenamento-e2e/
 backend/.copias-e2e/
 frontend/test-results/
 frontend/playwright-report/
+backend/.certificados/
+
+# Anotações locais de acesso e planilhas de usuários (ADR-022)
+*[Cc]redenciais*.txt
+*usuarios*.xlsx
+.coverage
+htmlcov/

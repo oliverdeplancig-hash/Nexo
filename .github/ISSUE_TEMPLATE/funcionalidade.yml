@@ -1,0 +1,23 @@
+name: Funcionalidade
+description: Proposta de algo novo ou de mudança de comportamento
+labels: ["funcionalidade"]
+body:
+  - type: textarea
+    id: necessidade
+    attributes:
+      label: Necessidade
+      description: Quem precisa, para quê e o que acontece hoje.
+    validations:
+      required: true
+  - type: textarea
+    id: proposta
+    attributes:
+      label: Proposta
+  - type: checkboxes
+    id: impacto
+    attributes:
+      label: Impacto
+      options:
+        - label: Mexe em permissões, privacidade ou auditoria
+        - label: Exige decisão nova (vai precisar de ADR)
+        - label: Exige dependência ou integração externa

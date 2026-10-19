@@ -1,0 +1,12 @@
+# Cobertura dos testes do backend (ADR-022). A CI falha abaixo de fail_under.
+[run]
+source = apps, nexo
+omit =
+    */migrations/*
+    */tests/*
+    nexo/wsgi.py
+
+[report]
+fail_under = 75
+skip_covered = true
+show_missing = true

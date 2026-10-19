@@ -20,16 +20,19 @@ from dataclasses import dataclass, field
 
 from asgiref.sync import sync_to_async
 from django.conf import settings
+from django.db import connections
 
 from apps.acesso.models import Acao
 from apps.acesso.servico import pode
 from apps.auditoria.servico import registrar
 from apps.busca.servico import buscar_trechos, evidencia_suficiente
+from apps.ia.fila import IAOcupada, vaga
 from apps.ia.provedores import ProvedorIndisponivel, obter_provedor
 from apps.ia.rag import FRASE_SEM_RESPOSTA, TrechoContexto, citacoes_validas, montar_mensagens
 from apps.motor.motor import avaliar, renderizar
 from apps.organizacao.diretorio import sugerir_setores
 
+from . import memoria
 from .models import Confianca, Conversa, Mensagem, Origem
 
 TAMANHO_MAXIMO_PERGUNTA = 4000
@@ -157,17 +160,22 @@ def preparar(usuario, conversa: Conversa, pergunta: str) -> Plano:
                 rastro=rastro,
             )
 
-    # 3. Busca híbrida com filtro de permissões
+    # 3. Busca híbrida com filtro de permissões. Pergunta de continuação ("e o prazo?") é buscada junto
+    #    com a pergunta anterior da conversa (memória, ADR-021).
     limite = settings.NEXO_IA["CONTEXTO_MAX_TRECHOS"]
+    consulta, continuacao = memoria.pergunta_para_busca(conversa, pergunta)
+    if continuacao:
+        rastro["continuacao"] = True
+        rastro["etapas"].append("memoria:continuacao")
     resultados, diagnostico = buscar_trechos(
-        usuario, pergunta, documento_id=documento.id if documento else None, limite=limite * 2
+        usuario, consulta, documento_id=documento.id if documento else None, limite=limite * 2
     )
     rastro["busca"] = diagnostico
     rastro["etapas"].append(f"busca:{len(resultados)}")
 
     if not resultados or not evidencia_suficiente(resultados):
         rastro["etapas"].append("sem_evidencia")
-        setores = _setores_dados(pergunta, usuario)
+        setores = _setores_dados(consulta, usuario)
         conteudo = "Não encontrei fontes suficientes nos documentos disponíveis para o seu perfil para responder com segurança."
         if setores:
             conteudo += " Estes setores podem ajudar com o assunto:"
@@ -195,23 +203,32 @@ def preparar(usuario, conversa: Conversa, pergunta: str) -> Plano:
         )
         for i, r in enumerate(resultados[:limite], start=1)
     ]
+    # Memória (ADR-021): as mensagens recentes vão literais; as anteriores, como resumo compactado.
+    janela = settings.NEXO_MEMORIA["JANELA_RECENTE"]
     historico = [
         {"role": "user" if m.papel == Mensagem.Papel.USUARIO else "assistant", "content": m.conteudo}
-        for m in conversa.mensagens.order_by("-id")[1:7]
+        for m in conversa.mensagens.order_by("-id")[1 : janela + 1]
     ][::-1]
+    resumo = memoria.texto_para_ia(conversa, usuario)
+    if resumo:
+        rastro["etapas"].append("memoria:resumo")
     return Plano(
         tipo="gerar",
         origem=Origem.RAG,
         trechos=trechos,
-        mensagens_llm=montar_mensagens(pergunta, trechos, historico),
+        mensagens_llm=montar_mensagens(pergunta, trechos, historico, resumo_conversa=resumo),
         rastro=rastro,
     )
 
 
-def _conteudo_extrativo(trechos: list[TrechoContexto]) -> str:
+def _conteudo_extrativo(trechos: list[TrechoContexto], ocupada: bool = False) -> str:
+    motivo = (
+        "Há muitas perguntas sendo respondidas ao mesmo tempo. Para você não esperar, "
+        if ocupada
+        else "O serviço de geração de respostas está indisponível no momento. "
+    )
     linhas = [
-        "O serviço de geração de respostas está indisponível no momento. "
-        "Estes são os trechos mais relevantes dos documentos autorizados para o seu perfil:",
+        motivo + "Estes são os trechos mais relevantes dos documentos autorizados para o seu perfil:",
         "",
     ]
     for t in trechos[:4]:
@@ -237,7 +254,7 @@ def finalizar(
         if extrativo:
             plano.origem = Origem.EXTRATIVO
             plano.confianca = Confianca.CAUTELA
-            gerado = _conteudo_extrativo(plano.trechos)
+            gerado = _conteudo_extrativo(plano.trechos, ocupada=bool(plano.rastro.get("ia_ocupada")))
         conteudo, citados = citacoes_validas(gerado, len(plano.trechos))
         documentos = Documento.objects.in_bulk({t.documento_id for t in plano.trechos})
         plano.fontes = [
@@ -275,6 +292,7 @@ def finalizar(
         duracao_ms=int((time.monotonic() - inicio) * 1000) if inicio else None,
     )
     conversa.save(update_fields=["atualizada_em"])
+    memoria.atualizar(conversa)  # compacta o que saiu da janela recente (ADR-021)
     registrar(
         None,
         "CONSULTA_ASSISTENTE",
@@ -293,6 +311,12 @@ def finalizar(
 
 def registrar_pergunta(conversa: Conversa, pergunta: str) -> Mensagem:
     return Mensagem.objects.create(conversa=conversa, papel=Mensagem.Papel.USUARIO, conteudo=pergunta)
+
+
+def _devolver_conexao() -> None:
+    conexao = connections["default"]  # roda na linha de execução dona da conexão
+    if not conexao.in_atomic_block:  # dentro de uma transação (testes), a conexão continua
+        conexao.close()
 
 
 async def executar(
@@ -323,6 +347,9 @@ async def executar(
 
     gerado, interrompida, extrativo = "", False, False
     if plano.tipo == "gerar":
+        # Capacidade (ADR-020): a conexão com o banco volta ao conjunto enquanto a pergunta espera a IA;
+        # senão, com a fila cheia, as telas e as respostas do motor ficariam sem conexão.
+        await sync_to_async(_devolver_conexao)()
         await emitir(
             {
                 "tipo": "status",
@@ -330,16 +357,36 @@ async def executar(
                 "texto": f"Consultando {len(plano.trechos)} trechos autorizados",
             }
         )
-        await emitir({"tipo": "status", "etapa": "gerando", "texto": "Gerando resposta"})
         provedor = obter_provedor()
         partes: list[str] = []
+
+        async def _posicao(n: int) -> None:
+            texto = (
+                "Aguardando a vez: há outra pergunta à frente"
+                if n == 1
+                else f"Aguardando a vez: {n} perguntas à frente"
+            )
+            await emitir({"tipo": "status", "etapa": "na_fila", "texto": texto})
+
         try:
-            async for pedaco in provedor.gerar_stream(plano.mensagens_llm):
-                if cancelado():
-                    interrompida = True
-                    break
-                partes.append(pedaco)
-                await emitir({"tipo": "token", "texto": pedaco})
+            async with vaga(_posicao):  # fila de geração (ADR-020)
+                await emitir({"tipo": "status", "etapa": "gerando", "texto": "Gerando resposta"})
+                async for pedaco in provedor.gerar_stream(plano.mensagens_llm):
+                    if cancelado():
+                        interrompida = True
+                        break
+                    partes.append(pedaco)
+                    await emitir({"tipo": "token", "texto": pedaco})
+        except IAOcupada:
+            extrativo = True
+            plano.rastro["ia_ocupada"] = True
+            await emitir(
+                {
+                    "tipo": "aviso",
+                    "codigo": "ia_ocupada",
+                    "texto": "Muitas perguntas ao mesmo tempo. Exibindo os trechos mais relevantes.",
+                }
+            )
         except ProvedorIndisponivel:
             extrativo = True
             await emitir(
