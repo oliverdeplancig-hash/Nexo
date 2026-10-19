@@ -15,6 +15,8 @@ inicial e versões menores podem mudar comportamento.
 - Modo de ensaio do servidor de rede (`instalar-servidor-windows.cmd teste`) e desinstalação sem perda de dados.
 - Cadastro com link para a pessoa criar a própria senha, sem senha por e-mail; o administrador pode reenviar o
   link (ADR-027).
+- Avisos de saúde do sistema também por e-mail, um por dia, quando o SMTP está configurado (ADR-023).
+- Testes da API do motor, da matriz de permissões e dos comandos de apoio; cobertura mínima na CI sobe para 82%.
 - Especificação OpenAPI em `/api/v1/esquema/` e documentação navegável em `/api/v1/documentacao/`, para a TI (ADR-026).
 - Avaliação da qualidade das respostas (`manage.py avaliar_respostas`), carga do acervo por pasta
   (`manage.py importar_pasta`) e conjunto de referência na CI (ADR-025).

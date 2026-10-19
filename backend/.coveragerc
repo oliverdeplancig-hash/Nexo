@@ -7,6 +7,6 @@ omit =
     nexo/wsgi.py
 
 [report]
-fail_under = 75
+fail_under = 82
 skip_covered = true
 show_missing = true

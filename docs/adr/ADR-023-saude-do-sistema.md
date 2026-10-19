@@ -26,6 +26,8 @@ ligado. Cada uma só aparecia em lugares diferentes, ou em lugar nenhum.
   monitoramento que já usa. `--avisar` dispara as notificações.
 - **Avisos**: o processador da fila verifica a cada hora e notifica quem administra permissões sobre itens
   em **problema** (não sobre atenção), no máximo uma vez por dia por assunto, com link para o painel.
+  Com o envio de e-mail configurado (ADR-018), cada administrador recebe também **um e-mail por dia** com
+  os problemas novos; falha no SMTP não impede a notificação interna.
 - **Privacidade**: só estados e números. Nada de conteúdo de documentos, nomes de pessoas, senhas ou
   caminhos completos de arquivos na API.
 - **Versão** do sistema em `nexo/versao.py` (SemVer, ADR-022), mostrada no painel e não exposta na
@@ -34,8 +36,8 @@ ligado. Cada uma só aparecia em lugares diferentes, ou em lugar nenhum.
 ## Alternativas consideradas
 - **Ferramenta de monitoramento externa** (Zabbix, Prometheus): a instituição pode já ter uma; o comando com
   código de saída permite integrar, mas o Nexo não pode depender dela num computador de unidade.
-- **E-mail para os administradores**: depende do SMTP (ADR-018), que pode não estar configurado; a
-  notificação interna sempre funciona. Pode ser acrescentado quando o SMTP estiver em uso.
+- **Só e-mail para os administradores**: depende do SMTP (ADR-018), que pode não estar configurado; por isso
+  o e-mail é um complemento e a notificação interna sempre funciona.
 - **Avisar também os itens em atenção**: geraria ruído diário (ex.: certificado autoassinado).
 
 ## Consequências

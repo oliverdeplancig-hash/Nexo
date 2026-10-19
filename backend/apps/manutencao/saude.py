@@ -338,6 +338,7 @@ def avisar() -> int:
     hoje = timezone.localdate().isoformat()
     destinatarios = [u for u in Usuario.objects.filter(is_active=True) if u.tem_funcao(Funcao.ADMIN_PERMISSOES)]
     enviados = 0
+    novos_por_usuario: dict = {}
     for item in pendentes:
         for usuario in destinatarios:
             ja = Notificacao.objects.filter(
@@ -345,6 +346,7 @@ def avisar() -> int:
             ).exists()
             if ja:
                 continue
+            novos_por_usuario.setdefault(usuario, []).append(item)
             notificar(
                 usuario,
                 "saude_sistema",
@@ -354,4 +356,35 @@ def avisar() -> int:
                 dados={"codigo": item["codigo"], "dia": hoje},
             )
             enviados += 1
+    _enviar_emails(novos_por_usuario)
     return enviados
+
+
+def _enviar_emails(novos_por_usuario: dict) -> None:
+    """Com o envio de e-mail configurado, cada administrador recebe UM e-mail com os problemas novos do dia.
+    Falha no SMTP não impede as notificações internas (ADR-023)."""
+    import logging
+
+    from django.core.mail import send_mail
+
+    from apps.contas.credenciais import _url_publica, email_configurado
+
+    if not email_configurado():
+        return
+    endereco = _url_publica(None)
+    for usuario, itens in novos_por_usuario.items():
+        if not usuario.email:
+            continue
+        linhas = [f"Olá, {usuario.nome_completo}.", "", "O Nexo encontrou problemas que precisam de atenção:", ""]
+        for item in itens:
+            linhas.append(f"- {item['titulo']}: {item['resumo']}")
+            if item["acao"]:
+                linhas.append(f"  O que fazer: {item['acao']}")
+        linhas += [
+            "",
+            f"Detalhes em Administração → Saúde do sistema{f': {endereco}/administracao?aba=saude' if endereco else ''}.",
+        ]
+        try:
+            send_mail(f"Nexo: {len(itens)} problema(s) no sistema", "\n".join(linhas), None, [usuario.email])
+        except Exception as erro:
+            logging.getLogger("nexo.saude").warning("Falha ao enviar aviso de saúde: %s", erro.__class__.__name__)

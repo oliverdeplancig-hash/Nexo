@@ -23,7 +23,7 @@ passarem a manter o sistema, e quando ele for para a nuvem (ADR-019).
   CI antes de entrar. Nenhum dado institucional vai ao GitHub (só manifestos de dependências).
 - **Cobertura** medida na CI com `pytest-cov`, com resumo na página da execução. Mínimo de 75%
   (`backend/.coveragerc`); era 79% ao adotar, sem contar os próprios testes nem as migrações. O mínimo
-  sobe à medida que entram testes.
+  sobe à medida que entram testes. Em 19/10/2026 subiu para 82% (cobertura de 85,7%).
 
 ## Alternativas consideradas e o que não se aplica
 - **Dockerfile para produção**: contraria a restrição de servidor sem Docker; Docker continua só para

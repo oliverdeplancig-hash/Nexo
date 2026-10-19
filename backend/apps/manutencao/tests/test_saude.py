@@ -75,3 +75,18 @@ def test_comando_sai_com_erro_quando_ha_problema(settings, tmp_path, capsys):
     with pytest.raises(SystemExit):
         call_command("verificar_saude")
     assert "Cópias de segurança" in capsys.readouterr().out
+
+
+def test_avisos_tambem_por_email_quando_configurado(administrador, settings, tmp_path):
+    from django.core import mail
+
+    settings.NEXO_BACKUP = {**settings.NEXO_BACKUP, "DIR": tmp_path}
+    settings.NEXO_EMAIL_HOST = "smtp.teste"
+    settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+    administrador.email = "admin@instituicao.teste"
+    administrador.save()
+    saude.avisar()
+    assert len(mail.outbox) == 1 and mail.outbox[0].to == ["admin@instituicao.teste"]
+    assert "Cópias de segurança" in mail.outbox[0].body
+    saude.avisar()
+    assert len(mail.outbox) == 1  # mesmo dia: nem notificação nem e-mail repetidos
